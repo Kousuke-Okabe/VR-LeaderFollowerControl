@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<kenkyu>
+  <setup>
+    <persp near="0.1" far="100.0" fov="104.0"/>
+    <vr pd="0.063"/>
+
+    <system asset="C:/local/uuu21-master/assets/" windowSizeRatio="1.0" serialPort="COM3" logfile="C:\local\uuu21-master\ReleaseEXE\senddata.log" glslVersion="#version 430" autoSkip="true"/>
+
+    <arm baseVelocity="100.0">
+      <m1 velocity="0.5" min="-90" max="90"/>
+      <m2 velocity="0.5" min="-90" max="90"/>
+      <m3 velocity="0.8" min="-90" max="90"/>
+    </arm>
+  </setup>
+</kenkyu>
