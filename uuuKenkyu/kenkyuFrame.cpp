@@ -217,7 +217,7 @@ void kenkyu::InitGraphics() {
 
 	//無地シェーダを用意
 	kenkyu::shaders["norm"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/norm)));
-	//kenkyu::shaders["redNorm"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/redNorm)));
+	kenkyu::shaders["virtualWindow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/virtualWindow)));
 	kenkyu::shaders["rainbow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/rainbow)));
 
 	//ステージのメッシュを追加
@@ -231,6 +231,8 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftGoo"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftGoo-mesh", glm::identity<glm::mat4>(),true);
 	kenkyu::gmeshs["cat"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat());
 	kenkyu::gmeshs["room"] = uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>());
+
+	kenkyu::gmeshs["plane"] = uuu::game::mesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", glm::identity<glm::mat4>());
 
 	log("assets was loaded");
 
