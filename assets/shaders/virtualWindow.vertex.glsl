@@ -13,7 +13,8 @@ void main(){
 
 //gl_Position=position*projection*lookAt*modelTransform;
 //gl_Position=position*modelTransform*lookAt*projection;
-gl_Position=vec4(position.xyz,1.0)*modelTransform*lookAt*projection;
+//gl_Position=vec4(position.xyz,1.0)*modelTransform*lookAt*projection;
+gl_Position=projection*lookAt*modelTransform*position;
 attribNormal=normal*modelTransform;
 
 

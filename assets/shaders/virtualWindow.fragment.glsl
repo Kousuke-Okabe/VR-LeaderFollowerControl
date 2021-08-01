@@ -6,12 +6,8 @@ out vec4 oColor;
 uniform vec4 lightway;
 uniform vec4 lookway;
 
-float powerAbs(float a){
-	return (a<0.0)?-a:0.8*a;
-}
-
 void main(){
-	//oColor=vec4(powerAbs(attribNormal.x),powerAbs(attribNormal.y),powerAbs(attribNormal.z),1.0);
+	//oColor=vec4(vec3(max(0,dot(attribNormal.xyz,lightway.xyz))+max(0,dot(attribNormal.xyz,lookway.xyz))+0.2),1.0);
 	oColor=vec4(1,1,1,1);
 
 }
