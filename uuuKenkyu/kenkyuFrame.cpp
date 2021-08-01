@@ -230,7 +230,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftPointer"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftPointer-mesh", glm::identity<glm::mat4>(),false);
 	kenkyu::gmeshs["leftGoo"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftGoo-mesh", glm::identity<glm::mat4>(),true);
 	kenkyu::gmeshs["cat"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat());
-	//kenkyu::gmeshs["room"] = uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>());
+	kenkyu::gmeshs["room"] = uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>());
 
 	kenkyu::gmeshs["karixplane"] = uuu::game::mesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", glm::translate(glm::identity<glm::mat4>(),glm::vec3(0,0.7,-1)));
 
