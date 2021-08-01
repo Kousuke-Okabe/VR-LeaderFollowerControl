@@ -45,6 +45,8 @@ kenkyu::_solverState kenkyu::solverState;
 std::unique_ptr<_uuu::virtualWindow> kenkyu::inMonitor;
 std::unique_ptr<uuu::textureOperator> debugTex;
 
+std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
+
 void kenkyu::Draw() {
 	//hmdの変形をとる
 	//kenkyu::kenkyuVr.SetCameraLookAtFromHmd(kenkyu::mainCamera);
@@ -52,12 +54,18 @@ void kenkyu::Draw() {
 	//kenkyu::kenkyuVr.SetCameraLookAtFromHmd(kenkyu::eyeL);
 	//kenkyu::mainCamera.SetLookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 0, 1));
 	
+	//テクスチャをバインドする
+	for (auto& i : kenkyu::texturesRequiringBindAndUniform)
+		i.second->Bind();
+
 	//ウィンドウのフレームを作る
 	kenkyu::DrawVrFrame(kenkyu::mainCamera);
 	//GUIを上から描画
 	kenkyu::DrawGui();
 
 	uuu::app::UpdateForBind();//画面更新
+
+	//return;
 
 	//VRの両目のフレームを生成する
 	if (kenkyu::systemBootFlags.vr) {
@@ -99,10 +107,19 @@ void kenkyu::DrawVrFrame(const uuu::cameraPersp& eye) {
 		s.second->SetUniformValue("lightway", glm::vec4(1, 1, 1, 0));
 		s.second->SetUniformValue("modelTransform", glm::identity<glm::mat4>());
 
-		if (s.first == "virtualWindow");
-			s.second->SetUniformTexUnit("tex0", *debugTex);
+		if (s.first == "virtualWindow")
+			for (auto& tx : kenkyu::texturesRequiringBindAndUniform)
+				s.second->SetUniformTexUnit(tx.first, *tx.second);
 	}
 
+	//仮想ウィンドウの描画
+	{
+		kenkyu::shaders.at("virtualWindow")->SetUniformValue("modelTransform", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1, -1)));
+
+		inMonitor->plane->DrawElements();
+	}
+
+	//ゲームメッシュの描画
 	for (auto& m : kenkyu::gmeshs) {
 		m.second.Draw();
 	}
@@ -277,11 +294,13 @@ void kenkyu::InitGraphics() {
 	}
 
 	//内臓モニターも表示
-	//inMonitor.reset(new _uuu::virtualWindow(kenkyu::windowBounds.first, kenkyu::windowBounds.second));
+	inMonitor.reset(new _uuu::virtualWindow(kenkyu::windowBounds.first, kenkyu::windowBounds.second, &kenkyu::gmeshs["karixplane"].GetMesh()));
+	texturesRequiringBindAndUniform["vwindow0"] = (&inMonitor->col);
 
 	uuu::textureLoaderFromImageFile load;
 	debugTex.reset(new uuu::textureOperator());
 	load.CreateTextureFromPNG(assets(cat.png), *debugTex);
+	texturesRequiringBindAndUniform["tex0"] = debugTex.get();
 
 	log("GPU resources was stored");
 }

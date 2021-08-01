@@ -170,6 +170,8 @@ namespace kenkyulocal {
 
 		static std::unique_ptr<_uuu::virtualWindow> inMonitor;//3D空間に内蔵されたモニター
 
+		static std::unordered_map<std::string,uuu::textureOperator*> texturesRequiringBindAndUniform;//バインドとユニフォームを要求するテクスチャ VR関係以外すべての参照
+
 		//hmdMatを変換する
 		static glm::mat4 TransVrMatToGmat4(const vr::HmdMatrix34_t& gen);
 

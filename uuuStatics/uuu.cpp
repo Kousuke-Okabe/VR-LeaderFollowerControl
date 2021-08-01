@@ -1509,6 +1509,11 @@ GLuint uuu::textureOperator::FindFreeTexUnit() {
 	for (GLuint& ch : uuu::textureOperator::reservedTexUnits)
 		if (ch == ret)ret++;
 
+	GLint num_tex_units;//最大数を取得
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &num_tex_units);
+
+	if (num_tex_units < ret)throw std::runtime_error("texture overflow");
+
 	return ret;
 
 }
@@ -1687,6 +1692,7 @@ __int8 uuu::textureLoaderFromImageFile::CreateTextureFromPNG(const std::string p
 	bool daburi = false;
 	for (GLuint& ch : uuu::textureOperator::reservedTexUnits)
 		if (ch == ret.texUnit)daburi = true;
+
 	//ダブリがなければ使用済みに追加
 	if (!daburi)uuu::textureOperator::reservedTexUnits.push_back(ret.texUnit);
 
