@@ -26,6 +26,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include "newArm.hpp"
+#include "virtualWindow.hpp"
 
 #ifdef _DEBUG
 #pragma comment (lib, "LinearMath_Debug.lib")
@@ -166,6 +167,8 @@ namespace kenkyulocal {
 			std::mutex updatedMutex;
 		};
 		static _solverState solverState;
+
+		static std::unique_ptr<_uuu::virtualWindow> inMonitor;//3D‹óŠÔ‚É“à‘ ‚³‚ê‚½ƒ‚ƒjƒ^[
 
 		//hmdMat‚ğ•ÏŠ·‚·‚é
 		static glm::mat4 TransVrMatToGmat4(const vr::HmdMatrix34_t& gen);
