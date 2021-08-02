@@ -9,6 +9,7 @@ uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
 typename std::unordered_map<std::string, uuu::game::mesh> kenkyu::gmeshs;
 std::unordered_map<std::string,std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> kenkyu::shaders;
+std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> kenkyu::textures;
 uuu::cameraPersp kenkyu::mainCamera, kenkyu::eyeR, kenkyu::eyeL;
 std::unique_ptr<uuu::frameBufferOperator> kenkyu::fboR, kenkyu::fboL;
 std::unique_ptr<uuu::textureOperator> kenkyu::colR, kenkyu::colL;
@@ -42,10 +43,9 @@ bool kenkyu::continueLoop;
 
 kenkyu::_solverState kenkyu::solverState;
 
-std::unique_ptr<_uuu::virtualWindow> kenkyu::inMonitor;
-std::unique_ptr<uuu::textureOperator> debugTex;
+//std::unique_ptr<uuu::textureOperator> debugTex;
 
-std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
+//std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
 
 void kenkyu::Draw() {
 	//hmdの変形をとる
@@ -55,8 +55,8 @@ void kenkyu::Draw() {
 	//kenkyu::mainCamera.SetLookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 0, 1));
 	
 	//テクスチャをバインドする
-	for (auto& i : kenkyu::texturesRequiringBindAndUniform)
-		i.second->Bind();
+	//for (auto& i : kenkyu::texturesRequiringBindAndUniform)
+	//	i.second->Bind();
 
 	//ウィンドウのフレームを作る
 	kenkyu::DrawVrFrame(kenkyu::mainCamera);
@@ -107,17 +107,17 @@ void kenkyu::DrawVrFrame(const uuu::cameraPersp& eye) {
 		s.second->SetUniformValue("lightway", glm::vec4(1, 1, 1, 0));
 		s.second->SetUniformValue("modelTransform", glm::identity<glm::mat4>());
 
-		if (s.first == "virtualWindow")
+		/*if (s.first == "virtualWindow")
 			for (auto& tx : kenkyu::texturesRequiringBindAndUniform)
-				s.second->SetUniformTexUnit(tx.first, *tx.second);
+				s.second->SetUniformTexUnit(tx.first, *tx.second);*/
 	}
 
 	//仮想ウィンドウの描画
-	{
-		kenkyu::shaders.at("virtualWindow")->SetUniformValue("modelTransform", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1, -1)));
+	//{
+	//	kenkyu::shaders.at("virtualWindow")->SetUniformValue("modelTransform", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1, -1)));
 
-		inMonitor->plane->DrawElements();
-	}
+	//	inMonitor->plane->DrawElements();
+	//}
 
 	//ゲームメッシュの描画
 	for (auto& m : kenkyu::gmeshs) {
@@ -243,6 +243,11 @@ void kenkyu::InitGraphics() {
 	kenkyu::shaders["virtualWindow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/virtualWindow)));
 	kenkyu::shaders["rainbow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/rainbow)));
 
+	//テクスチャを用意
+	uuu::textureLoaderFromImageFile load;
+	textures["cat"].reset(new uuu::textureOperator());
+	load.CreateTextureFromPNG(assets(cat.png), *textures.at("cat").get());
+
 	//ステージのメッシュを追加
 	//kenkyu::gmeshs["monkey"]=uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "monkey-mesh", glm::translate(glm::identity<glm::mat4>(), gvec3(0, 0, 5)));
 	kenkyu::gmeshs["rightHand"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightHand-mesh", glm::identity<glm::mat4>(),true);
@@ -255,7 +260,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["cat"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat());
 	kenkyu::gmeshs["room"] = uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>());
 
-	kenkyu::gmeshs["karixplane"] = uuu::game::mesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", glm::translate(glm::identity<glm::mat4>(),glm::vec3(0,2,-4)));
+	kenkyu::gmeshs["karixplane"] = uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -4)));
 
 	log("assets was loaded");
 
@@ -294,13 +299,8 @@ void kenkyu::InitGraphics() {
 	}
 
 	//内臓モニターも表示
-	inMonitor.reset(new _uuu::virtualWindow(kenkyu::windowBounds.first, kenkyu::windowBounds.second, &kenkyu::gmeshs["karixplane"].GetMesh()));
-	texturesRequiringBindAndUniform["vwindow0"] = (&inMonitor->col);
-
-	uuu::textureLoaderFromImageFile load;
-	debugTex.reset(new uuu::textureOperator());
-	load.CreateTextureFromPNG(assets(cat.png), *debugTex);
-	texturesRequiringBindAndUniform["tex0"] = debugTex.get();
+	/*inMonitor.reset(new _uuu::virtualWindow(kenkyu::windowBounds.first, kenkyu::windowBounds.second, &kenkyu::gmeshs["karixplane"].GetMesh()));
+	texturesRequiringBindAndUniform["vwindow0"] = (&inMonitor->col);*/
 
 	log("GPU resources was stored");
 }

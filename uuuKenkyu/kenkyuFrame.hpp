@@ -105,6 +105,7 @@ namespace kenkyulocal {
 		//static std::vector<uuu::easy::neo3Dmesh> meshs;
 		static std::unordered_map<std::string, uuu::game::mesh> gmeshs;
 		static std::unordered_map<std::string, std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> shaders;
+		static std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> textures;
 
 		static uuu::cameraPersp mainCamera, eyeR, eyeL;
 		static std::unique_ptr<uuu::frameBufferOperator> fboR, fboL;//VR用のフレーム
@@ -170,7 +171,7 @@ namespace kenkyulocal {
 
 		static std::unique_ptr<_uuu::virtualWindow> inMonitor;//3D空間に内蔵されたモニター
 
-		static std::unordered_map<std::string,uuu::textureOperator*> texturesRequiringBindAndUniform;//バインドとユニフォームを要求するテクスチャ VR関係以外すべての参照
+		//static std::unordered_map<std::string,uuu::textureOperator*> texturesRequiringBindAndUniform;//バインドとユニフォームを要求するテクスチャ VR関係以外すべての参照
 
 		//hmdMatを変換する
 		static glm::mat4 TransVrMatToGmat4(const vr::HmdMatrix34_t& gen);

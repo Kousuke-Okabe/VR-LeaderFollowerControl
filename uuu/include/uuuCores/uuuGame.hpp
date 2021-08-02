@@ -32,10 +32,36 @@ namespace uuu {
 			glm::mat4& GetTransform();
 			uuu::easy::neo3Dmesh& GetMesh();
 
-			void Draw(shaderSettingCall&setting,const std::string& attribName="modelTransform");
-			void Draw(const std::string& attribName = "modelTransform");
+			virtual void Draw(shaderSettingCall&setting,const std::string& attribName="modelTransform");
+			virtual void Draw(const std::string& attribName = "modelTransform");
+
+			virtual ~mesh();
+
+			//コピー
+			mesh(mesh& arg);
+			virtual mesh& operator=(mesh&& arg);
 		};
 
+		class texturedMesh :public mesh {
+		protected:
+			using super = mesh;
+
+			textureOperator* tex;
+			std::string uniformName;
+		public:
+			texturedMesh();
+			texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, textureOperator* tex, const std::string& uniformName = "tex0");
+			texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, textureOperator* tex, glm::mat4 def, const std::string& uniformName = "tex0", bool skipDrawDef = false);
+		
+			virtual void Draw(shaderSettingCall& setting, const std::string& attribName = "modelTransform");
+			virtual void Draw(const std::string& attribName = "modelTransform");
+
+			virtual ~texturedMesh();
+
+			//コピー
+			texturedMesh(uuu::game::texturedMesh& arg);
+			virtual texturedMesh& operator=(texturedMesh&& arg);
+		};
 
 	};
 };

@@ -44,3 +44,60 @@ void uuu::game::mesh::Draw(const std::string& attribName) {
 
 	return;
 }
+
+uuu::game::mesh::~mesh() {
+
+}
+
+uuu::game::mesh::mesh(mesh& arg) {
+	this->operator=(std::move(arg));
+}
+uuu::game::mesh& uuu::game::mesh::operator=(uuu::game::mesh&& arg) {
+	inner = std::move(arg.inner);
+	transform = arg.transform;
+
+	return *this;
+}
+
+uuu::game::texturedMesh::texturedMesh():super() {
+
+}
+uuu::game::texturedMesh::texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, textureOperator* tex, const std::string& uniformName):super(shader,path,mesh) {
+	this->tex = tex;
+	this->uniformName = uniformName;
+}
+uuu::game::texturedMesh::texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, textureOperator* tex, glm::mat4 def, const std::string& uniformName, bool skipDrawDef) : super(shader, path, mesh,def,skipDrawDef) {
+	this->tex = tex;
+	this->uniformName = uniformName;
+}
+
+uuu::game::texturedMesh::~texturedMesh() {
+
+}
+uuu::game::texturedMesh::texturedMesh(uuu::game::texturedMesh& arg) :super(arg) {
+	this->tex = arg.tex;
+	this->uniformName = arg.uniformName;
+}
+uuu::game::texturedMesh& uuu::game::texturedMesh::operator=(uuu::game::texturedMesh&& arg) {
+	this->tex = arg.tex;
+	this->uniformName = arg.uniformName;
+
+	super::operator=(std::move(arg));
+
+	return *this;
+}
+
+void uuu::game::texturedMesh::Draw(shaderSettingCall& setting, const std::string& attribName) {
+
+	this->tex->Bind();
+	this->GetMesh().Shader().lock()->SetUniformTexUnit(this->uniformName, *this->tex);
+
+	super::Draw(setting, attribName);
+}
+void uuu::game::texturedMesh::Draw(const std::string& attribName) {
+
+	this->tex->Bind();
+	this->GetMesh().Shader().lock()->SetUniformTexUnit(this->uniformName, *this->tex);
+
+	super::Draw(attribName);
+}
