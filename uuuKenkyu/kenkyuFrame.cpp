@@ -513,7 +513,7 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 				if (actionWarehouse.rhandtype == 2) {
 					//それぞれの差分ベクトルをとる
 					auto posdist = pos - beforePosR.pos;
-					auto quatdist = glm::inverse(beforePosR.quat) * q;
+					auto quatdist = q * glm::inverse(beforePosR.quat);
 
 					//目標姿勢を変換
 					{
