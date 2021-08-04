@@ -519,7 +519,7 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 					{
 						std::lock_guard<std::mutex> lock(mutexRefPoint);
 						kenkyu::reference.pos += posdist;
-						kenkyu::reference.quat *= quatdist;
+						kenkyu::reference.quat = quatdist * kenkyu::reference.quat;
 					}
 
 					//当然モデル位置も更新
