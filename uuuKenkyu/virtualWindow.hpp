@@ -10,7 +10,7 @@ namespace _uuu {
 		using super = uuu::game::texturedMesh;
 	protected:
 		void SetupBuffers(uint32_t w, uint32_t h);
-	public:
+	//public:
 		std::unique_ptr<uuu::frameBufferOperator> fbo;
 		std::unique_ptr<uuu::textureOperator> col, dep;
 
@@ -29,6 +29,8 @@ namespace _uuu {
 		//ÉRÉsÅ[
 		virtualWindow(virtualWindow& arg);
 		virtual virtualWindow& operator=(virtualWindow&& arg);
+
+		uuu::frameBufferOperator* GetFbo();
 	};
 
 };

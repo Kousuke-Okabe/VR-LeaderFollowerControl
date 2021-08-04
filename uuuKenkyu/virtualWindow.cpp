@@ -52,3 +52,7 @@ void _uuu::virtualWindow::Draw(const std::string& attribName) {
 
 	super::Draw(attribName);
 }
+
+uuu::frameBufferOperator* _uuu::virtualWindow::GetFbo() {
+	return this->fbo.get();
+}

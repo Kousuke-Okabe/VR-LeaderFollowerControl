@@ -43,20 +43,13 @@ bool kenkyu::continueLoop;
 
 kenkyu::_solverState kenkyu::solverState;
 
+kenkyu::_specialMeshs kenkyu::specialMeshs;
+
 //std::unique_ptr<uuu::textureOperator> debugTex;
 
 //std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
 
 void kenkyu::Draw() {
-	//hmdの変形をとる
-	//kenkyu::kenkyuVr.SetCameraLookAtFromHmd(kenkyu::mainCamera);
-	//kenkyu::kenkyuVr.SetCameraLookAtFromHmd(kenkyu::eyeR);
-	//kenkyu::kenkyuVr.SetCameraLookAtFromHmd(kenkyu::eyeL);
-	//kenkyu::mainCamera.SetLookAt(glm::vec3(0, 0, 0), glm::vec3(1, 0, 0), glm::vec3(0, 0, 1));
-	
-	//テクスチャをバインドする
-	//for (auto& i : kenkyu::texturesRequiringBindAndUniform)
-	//	i.second->Bind();
 
 	//ウィンドウのフレームを作る
 	kenkyu::DrawVrFrame(kenkyu::mainCamera);
@@ -65,7 +58,8 @@ void kenkyu::Draw() {
 
 	uuu::app::UpdateForBind();//画面更新
 
-	//return;
+	//内臓モニター用のフレームを作る
+	kenkyu::DrawVrFrame(*kenkyu::specialMeshs.inMonitor->GetFbo(),kenkyu::mainCamera);
 
 	//VRの両目のフレームを生成する
 	if (kenkyu::systemBootFlags.vr) {
@@ -261,7 +255,8 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>()));
 
 	kenkyu::gmeshs["karixplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -4))));
-	kenkyu::gmeshs["inMonitor"].reset(new _uuu::virtualWindow(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", 256, 256, glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1, -2))));
+	kenkyu::specialMeshs.inMonitor = new _uuu::virtualWindow(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
+	kenkyu::gmeshs["inMonitor"].reset(kenkyu::specialMeshs.inMonitor);
 
 	log("assets was loaded");
 

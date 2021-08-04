@@ -169,7 +169,11 @@ namespace kenkyulocal {
 		};
 		static _solverState solverState;
 
-		static std::unique_ptr<_uuu::virtualWindow> inMonitor;//3D空間に内蔵されたモニター
+		//メッシュの参照置き場　かならず所有権をほかに渡すこと
+		struct _specialMeshs {
+			_uuu::virtualWindow* inMonitor;
+		};
+		static _specialMeshs specialMeshs;
 
 		//static std::unordered_map<std::string,uuu::textureOperator*> texturesRequiringBindAndUniform;//バインドとユニフォームを要求するテクスチャ VR関係以外すべての参照
 
