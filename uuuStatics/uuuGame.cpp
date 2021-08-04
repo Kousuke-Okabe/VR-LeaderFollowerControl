@@ -101,3 +101,7 @@ void uuu::game::texturedMesh::Draw(const std::string& attribName) {
 
 	super::Draw(attribName);
 }
+
+uuu::game::texturedMesh::texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, glm::mat4 def, const std::string& uniformName, bool skipDrawDef) : super(shader, path, mesh, def, skipDrawDef) {
+	this->uniformName = uniformName;
+}

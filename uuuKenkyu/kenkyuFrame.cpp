@@ -7,7 +7,7 @@ using namespace Eigen;
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
-typename std::unordered_map<std::string, uuu::game::mesh> kenkyu::gmeshs;
+typename std::unordered_map<std::string, std::unique_ptr<uuu::game::mesh>> kenkyu::gmeshs;
 std::unordered_map<std::string,std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> kenkyu::shaders;
 std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> kenkyu::textures;
 uuu::cameraPersp kenkyu::mainCamera, kenkyu::eyeR, kenkyu::eyeL;
@@ -121,7 +121,7 @@ void kenkyu::DrawVrFrame(const uuu::cameraPersp& eye) {
 
 	//ゲームメッシュの描画
 	for (auto& m : kenkyu::gmeshs) {
-		m.second.Draw();
+		m.second->Draw();
 	}
 
 	return;/*
@@ -250,17 +250,18 @@ void kenkyu::InitGraphics() {
 
 	//ステージのメッシュを追加
 	//kenkyu::gmeshs["monkey"]=uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "monkey-mesh", glm::translate(glm::identity<glm::mat4>(), gvec3(0, 0, 5)));
-	kenkyu::gmeshs["rightHand"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightHand-mesh", glm::identity<glm::mat4>(),true);
-	kenkyu::gmeshs["rightPointer"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightPointer-mesh", glm::identity<glm::mat4>(),false);
-	kenkyu::gmeshs["rightGoo"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightGoo-mesh", glm::identity<glm::mat4>(),true);
+	kenkyu::gmeshs["rightHand"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightHand-mesh", glm::identity<glm::mat4>(),true));
+	kenkyu::gmeshs["rightPointer"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightPointer-mesh", glm::identity<glm::mat4>(),false));
+	kenkyu::gmeshs["rightGoo"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightGoo-mesh", glm::identity<glm::mat4>(),true));
 
-	kenkyu::gmeshs["leftHand"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftHand-mesh", glm::identity<glm::mat4>(),true);
-	kenkyu::gmeshs["leftPointer"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftPointer-mesh", glm::identity<glm::mat4>(),false);
-	kenkyu::gmeshs["leftGoo"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftGoo-mesh", glm::identity<glm::mat4>(),true);
-	kenkyu::gmeshs["cat"] = uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat());
-	kenkyu::gmeshs["room"] = uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>());
+	kenkyu::gmeshs["leftHand"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftHand-mesh", glm::identity<glm::mat4>(),true));
+	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftPointer-mesh", glm::identity<glm::mat4>(),false));
+	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
+	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat()));
+	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>()));
 
-	kenkyu::gmeshs["karixplane"] = uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -4)));
+	kenkyu::gmeshs["karixplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -4))));
+	kenkyu::gmeshs["inMonitor"].reset(new _uuu::virtualWindow(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", 256, 256, glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1, -2))));
 
 	log("assets was loaded");
 
@@ -456,14 +457,14 @@ void kenkyu::SceneEvents(vr::VREvent_t event) {
 
 		//アクションがあったとき表示状態を切り替える
 		if (hand == right) {
-			kenkyu::gmeshs["rightHand"].skipDraw = !(actionWarehouse.rhandtype == 0);
-			kenkyu::gmeshs["rightPointer"].skipDraw = !(actionWarehouse.rhandtype == 1);
-			kenkyu::gmeshs["rightGoo"].skipDraw = !(actionWarehouse.rhandtype == 2);
+			kenkyu::gmeshs["rightHand"]->skipDraw = !(actionWarehouse.rhandtype == 0);
+			kenkyu::gmeshs["rightPointer"]->skipDraw = !(actionWarehouse.rhandtype == 1);
+			kenkyu::gmeshs["rightGoo"]->skipDraw = !(actionWarehouse.rhandtype == 2);
 		}
 		else if (hand == left) {
-			kenkyu::gmeshs["leftHand"].skipDraw = !(actionWarehouse.lhandtype == 0);
-			kenkyu::gmeshs["leftPointer"].skipDraw = !(actionWarehouse.lhandtype == 1);
-			kenkyu::gmeshs["leftGoo"].skipDraw = !(actionWarehouse.lhandtype == 2);
+			kenkyu::gmeshs["leftHand"]->skipDraw = !(actionWarehouse.lhandtype == 0);
+			kenkyu::gmeshs["leftPointer"]->skipDraw = !(actionWarehouse.lhandtype == 1);
+			kenkyu::gmeshs["leftGoo"]->skipDraw = !(actionWarehouse.lhandtype == 2);
 		}
 
 	}
@@ -503,9 +504,9 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 
 			//右手or左手なら位置追従させる
 			if (role == vr::TrackedControllerRole_RightHand) {
-				kenkyu::gmeshs["rightHand"].SetTransform(trans);
-				kenkyu::gmeshs["rightPointer"].SetTransform(trans);
-				kenkyu::gmeshs["rightGoo"].SetTransform(trans);
+				kenkyu::gmeshs["rightHand"]->SetTransform(trans);
+				kenkyu::gmeshs["rightPointer"]->SetTransform(trans);
+				kenkyu::gmeshs["rightGoo"]->SetTransform(trans);
 
 				//アクションがあるなら送信
 				//グーは相対モード
@@ -522,7 +523,7 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 					}
 
 					//当然モデル位置も更新
-					kenkyu::gmeshs["cat"].SetTransform(reference.toMat());
+					kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 				}
 				//パーはアブソリュートモード
 				else if (actionWarehouse.rhandtype == 0) {
@@ -537,7 +538,7 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 					}
 
 					//当然モデル位置も更新
-					kenkyu::gmeshs["cat"].SetTransform(reference.toMat());
+					kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 				}
 
 				//座標を記録
@@ -553,9 +554,9 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 			}
 
 			if (role == vr::TrackedControllerRole_LeftHand) {
-				kenkyu::gmeshs["leftHand"].SetTransform(trans);
-				kenkyu::gmeshs["leftPointer"].SetTransform(trans);
-				kenkyu::gmeshs["leftGoo"].SetTransform(trans);
+				kenkyu::gmeshs["leftHand"]->SetTransform(trans);
+				kenkyu::gmeshs["leftPointer"]->SetTransform(trans);
+				kenkyu::gmeshs["leftGoo"]->SetTransform(trans);
 			}
 		}
 		//hmdなら

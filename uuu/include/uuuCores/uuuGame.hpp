@@ -17,7 +17,6 @@ namespace uuu {
 			uuu::easy::neo3Dmesh inner;
 			glm::mat4 transform;
 
-			
 		public:
 			bool skipDraw;//描画をスキップする
 
@@ -48,6 +47,9 @@ namespace uuu {
 
 			textureOperator* tex;
 			std::string uniformName;
+
+			//virtualWindowが使用するコンストラクタ
+			texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, glm::mat4 def, const std::string& uniformName, bool skipDrawDef);
 		public:
 			texturedMesh();
 			texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, textureOperator* tex, const std::string& uniformName = "tex0");

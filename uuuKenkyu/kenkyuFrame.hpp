@@ -103,7 +103,7 @@ namespace kenkyulocal {
 
 		static uuu::vrMgr kenkyuVr;
 		//static std::vector<uuu::easy::neo3Dmesh> meshs;
-		static std::unordered_map<std::string, uuu::game::mesh> gmeshs;
+		static std::unordered_map<std::string, std::unique_ptr<uuu::game::mesh>> gmeshs;
 		static std::unordered_map<std::string, std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> shaders;
 		static std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> textures;
 
