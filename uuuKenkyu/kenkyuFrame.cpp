@@ -45,6 +45,8 @@ kenkyu::_solverState kenkyu::solverState;
 
 kenkyu::_specialMeshs kenkyu::specialMeshs;
 
+
+uuu::textureOperator depr, depl;
 //std::unique_ptr<uuu::textureOperator> debugTex;
 
 //std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
@@ -283,14 +285,14 @@ void kenkyu::InitGraphics() {
 
 		kenkyu::colR.reset(new uuu::textureOperator());
 		kenkyu::colL.reset(new uuu::textureOperator());
-		uuu::textureOperator depr, depl;
+		//uuu::textureOperator depr, depl;
 		colR->CreateManual(kenkyuVr.ww, kenkyuVr.wh,GL_RGBA, GL_RGBA,GL_UNSIGNED_BYTE);
-		depr.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH_COMPONENT, GL_FLOAT);
+		depr.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 		fboR->AttachTextureOperator(fboR->color0, *colR);
 		fboR->AttachTextureOperator(fboR->depth, depr);
 
 		colL->CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
-		depl.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH_COMPONENT, GL_FLOAT);
+		depl.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
 		fboL->AttachTextureOperator(fboL->color0, *colL);
 		fboL->AttachTextureOperator(fboL->depth, depl);
 
