@@ -1394,7 +1394,7 @@ __int8 uuu::fontRenderFT::Unbind() {
 
 std::list<GLuint> uuu::textureOperator::reservedTexUnits;//予約済みテクスチャユニット　の本体
 
-__int8 uuu::textureOperator::CreateManual(GLuint texUnit, GLuint width, GLuint height,int format) {
+__int8 uuu::textureOperator::__CreateTexture(GLuint texUnit, GLuint width, GLuint height, GLuint format, GLuint informat,GLuint type, void* data) {
 
 	this->texUnit = texUnit;
 	//使用済みの仲間入りや
@@ -1410,14 +1410,14 @@ __int8 uuu::textureOperator::CreateManual(GLuint texUnit, GLuint width, GLuint h
 
 	glBindTexture(GL_TEXTURE_2D, this->texture);
 
-	//フォーマットを決める(完全実装ではありません☆)
-	int informat;//外部的フォーマット
-	if (format==uuu::textureFormat::depth16 | format==uuu::textureFormat::depth24 | format==uuu::textureFormat::depth32)informat = GL_DEPTH;
-	else informat = GL_RGBA;
+	////フォーマットを決める(完全実装ではありません☆)
+	//int informat;//外部的フォーマット
+	//if (format==uuu::textureFormat::depth16 | format==uuu::textureFormat::depth24 | format==uuu::textureFormat::depth32)informat = GL_DEPTH;
+	//else informat = GL_RGBA;
 
 
 	//テクスチャにからイメージを書き込む
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, informat, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, informat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1432,56 +1432,65 @@ __int8 uuu::textureOperator::CreateManual(GLuint texUnit, GLuint width, GLuint h
 
 	return true;
 }
-__int8 uuu::textureOperator::CreateManual(GLuint width, GLuint height, int format) {
+__int8 uuu::textureOperator::CreateManual(GLuint texUnit, GLuint width, GLuint height,GLuint format,GLuint informat, GLuint type,void* data) {
+	//ダブったデータを消す
+	auto ite = std::find(reservedTexUnits.begin(), reservedTexUnits.end(), texUnit);
+	if (ite != reservedTexUnits.end())
+		glDeleteTextures(1, &(ite.operator*()));
+
+	return __CreateTexture(texUnit, width, height, format, informat,type, data);
+}
+__int8 uuu::textureOperator::CreateManual(GLuint width, GLuint height, GLuint format, GLuint informat, GLuint type,void* data) {
 
 	//テクスチャユニット頂戴
 	GLuint texUnit = this->FindFreeTexUnit();
 
-	this->texUnit = texUnit;
-	//使用済みの仲間入りや
-	bool daburi = false;
-	for (GLuint& ch : uuu::textureOperator::reservedTexUnits)
-		if (ch == texUnit)daburi = true;
-	//ダブリがなければ使用済みに追加
-	if (!daburi)uuu::textureOperator::reservedTexUnits.push_back(texUnit);
+	return this->__CreateTexture(texUnit, width, height, format, informat,type, data);
+	//this->texUnit = texUnit;
+	////使用済みの仲間入りや
+	//bool daburi = false;
+	//for (GLuint& ch : uuu::textureOperator::reservedTexUnits)
+	//	if (ch == texUnit)daburi = true;
+	////ダブリがなければ使用済みに追加
+	//if (!daburi)uuu::textureOperator::reservedTexUnits.push_back(texUnit);
 
-	//ユニットをアクティブに&テクスチャ生成
-	glActiveTexture(GL_TEXTURE0 + texUnit);
-	glGenTextures(1, &this->texture);
+	////ユニットをアクティブに&テクスチャ生成
+	//glActiveTexture(GL_TEXTURE0 + texUnit);
+	//glGenTextures(1, &this->texture);
 
-	glBindTexture(GL_TEXTURE_2D, this->texture);
+	//glBindTexture(GL_TEXTURE_2D, this->texture);
 
-	//フォーマットを決める(完全実装ではありません☆)
-	int informat;//外部的フォーマット
-	int type;//実装タイプ
-	if ((format == uuu::textureFormat::depth16) || (format == uuu::textureFormat::depth24) || (format == uuu::textureFormat::depth32)) {
-		informat = GL_DEPTH_COMPONENT;
-		type = GL_FLOAT;
-	}
-	else if (format == uuu::textureFormat::stencil8) {
-		informat = GL_STENCIL_COMPONENTS;
-		type = GL_BOOL;
-	}
-	else {
-		informat = GL_RGBA;
-		type = GL_UNSIGNED_BYTE;
-	}
+	////フォーマットを決める(完全実装ではありません☆)
+	//int informat;//外部的フォーマット
+	//int type;//実装タイプ
+	//if ((format == uuu::textureFormat::depth16) || (format == uuu::textureFormat::depth24) || (format == uuu::textureFormat::depth32)) {
+	//	informat = GL_DEPTH_COMPONENT;
+	//	type = GL_FLOAT;
+	//}
+	//else if (format == uuu::textureFormat::stencil8) {
+	//	informat = GL_STENCIL_COMPONENTS;
+	//	type = GL_BOOL;
+	//}
+	//else {
+	//	informat = GL_RGBA;
+	//	type = GL_UNSIGNED_BYTE;
+	//}
 
-	//テクスチャにからイメージを書き込む ☆ informatを無効化
-	glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, informat, type, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	////テクスチャにからイメージを書き込む ☆ informatを無効化
+	//glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, informat, type, 0);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	//サンプラーの作成
-	glGenSamplers(1, &this->sampler);
-	glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glSamplerParameteri(this->sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glSamplerParameteri(this->sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	////サンプラーの作成
+	//glGenSamplers(1, &this->sampler);
+	//glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glSamplerParameteri(this->sampler, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//glSamplerParameteri(this->sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glSamplerParameteri(this->sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	return true;
+	//return true;
 }
 __int8 uuu::textureOperator::Bind() const{
 	//テクスチャ本体とサンプラをバインド

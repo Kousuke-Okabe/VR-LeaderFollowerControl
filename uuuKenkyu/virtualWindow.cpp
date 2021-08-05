@@ -8,7 +8,7 @@ void _uuu::virtualWindow::SetupBuffers(uint32_t w, uint32_t h) {
 
 
 	col->CreateManual(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
-	dep->CreateManual(w, h, GL_DEPTH, GL_DEPTH, GL_FLOAT);
+	dep->CreateManual(w, h, GL_DEPTH, GL_DEPTH_COMPONENT, GL_FLOAT);
 	fbo->AttachTextureOperator(fbo->color0, *col);
 	fbo->AttachTextureOperator(fbo->depth, *dep);
 

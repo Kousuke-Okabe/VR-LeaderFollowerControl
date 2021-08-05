@@ -922,6 +922,7 @@ namespace uuu {
 		friend uuu::frameBufferOperator;
 		friend uuu::shaderProgramObjectVertexFragment;
 
+	protected:
 		GLuint texture;
 		GLuint sampler;
 		GLuint texUnit;
@@ -929,11 +930,13 @@ namespace uuu {
 		//使用済みテクスチャユニットたち
 		static std::list<GLuint> reservedTexUnits;
 
+		//テクスチャを生成する　内部用
+		__int8 __CreateTexture(GLuint texUnit, GLuint width, GLuint height, GLuint format, GLuint informat,GLuint type, void* data = nullptr);
 	public:
 		//マニュアル操作でテクスチャを生成する　ふつうは画像データを読み込む
-		__int8 CreateManual(GLuint texUnit, GLuint width, GLuint height,int format);
+		__int8 CreateManual(GLuint texUnit, GLuint width, GLuint height,GLuint format, GLuint informat, GLuint type,void* data=nullptr);
 		//texUnit自動生成する版
-		__int8 CreateManual(GLuint width, GLuint height, int format);
+		__int8 CreateManual(GLuint width, GLuint height, GLuint format, GLuint informat, GLuint type,void* data=nullptr);
 		//予約済テクスチャユニットを開放
 		__int8 ReleaseTexUnit(GLuint tar);
 		//予約済みではないテクスチャユニットを探す
@@ -950,6 +953,8 @@ namespace uuu {
 	//テクスチャローダー
 	class textureLoaderFromImageFile {
 		friend uuu::bitMapAtlas;
+	protected:
+		//継承先でテクスチャをいじる
 
 	public:
 		//pngファイルを読み込んでテクスチャオペレータを作る

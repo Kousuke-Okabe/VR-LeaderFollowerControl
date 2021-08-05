@@ -285,12 +285,12 @@ void kenkyu::InitGraphics() {
 		kenkyu::colL.reset(new uuu::textureOperator());
 		uuu::textureOperator depr, depl;
 		colR->CreateManual(kenkyuVr.ww, kenkyuVr.wh,GL_RGBA, GL_RGBA,GL_UNSIGNED_BYTE);
-		depr.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH, GL_FLOAT);
+		depr.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH_COMPONENT, GL_FLOAT);
 		fboR->AttachTextureOperator(fboR->color0, *colR);
 		fboR->AttachTextureOperator(fboR->depth, depr);
 
 		colL->CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
-		depl.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH, GL_FLOAT);
+		depl.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH_COMPONENT, GL_FLOAT);
 		fboL->AttachTextureOperator(fboL->color0, *colL);
 		fboL->AttachTextureOperator(fboL->depth, depl);
 
