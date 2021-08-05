@@ -7,8 +7,8 @@ void _uuu::virtualWindow::SetupBuffers(uint32_t w, uint32_t h) {
 	if (!dep)dep.reset(new uuu::textureOperator());
 
 
-	col->CreateManual(w, h, uuu::textureFormat::rgba16);
-	dep->CreateManual(w, h, uuu::textureFormat::depth16);
+	col->CreateManual(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+	dep->CreateManual(w, h, GL_DEPTH, GL_DEPTH, GL_FLOAT);
 	fbo->AttachTextureOperator(fbo->color0, *col);
 	fbo->AttachTextureOperator(fbo->depth, *dep);
 
@@ -24,7 +24,7 @@ _uuu::virtualWindow::virtualWindow(std::shared_ptr<uuu::shaderProgramObjectVerte
 	this->tex = this->col.get();
 }
 _uuu::virtualWindow::~virtualWindow() {
-
+	int debug = 0;
 }
 
 //ÉRÉsÅ[

@@ -51,15 +51,15 @@ kenkyu::_specialMeshs kenkyu::specialMeshs;
 
 void kenkyu::Draw() {
 
+	//内臓モニター用のフレームを作る
+	kenkyu::DrawVrFrame(*kenkyu::specialMeshs.inMonitor->GetFbo(), kenkyu::mainCamera);
+
 	//ウィンドウのフレームを作る
 	kenkyu::DrawVrFrame(kenkyu::mainCamera);
 	//GUIを上から描画
 	kenkyu::DrawGui();
 
 	uuu::app::UpdateForBind();//画面更新
-
-	//内臓モニター用のフレームを作る
-	kenkyu::DrawVrFrame(*kenkyu::specialMeshs.inMonitor->GetFbo(),kenkyu::mainCamera);
 
 	//VRの両目のフレームを生成する
 	if (kenkyu::systemBootFlags.vr) {
@@ -217,6 +217,9 @@ void kenkyu::BootUuuSetForKekyu() {
 
 	log("uuu subsystem was started");
 
+	//テクスチャを起動
+	FreeImage_Initialise();
+
 	//トルクを入れる
 	if (kenkyu::systemBootFlags.serial)kenkyu::armMgr->Torque(255, 1);
 
@@ -238,9 +241,10 @@ void kenkyu::InitGraphics() {
 	kenkyu::shaders["rainbow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/rainbow)));
 
 	//テクスチャを用意
-	uuu::textureLoaderFromImageFile load;
+	//uuu::textureLoaderFromImageFile load;
 	textures["cat"].reset(new uuu::textureOperator());
-	load.CreateTextureFromPNG(assets(cat.png), *textures.at("cat").get());
+	//load.CreateTextureFromPNG(assets(cat.png), *textures.at("cat").get());
+	_uuu::textureLoaderByFreeImage::LoadTextureFromFile(assets(cat.png), *textures.at("cat").get());
 
 	//ステージのメッシュを追加
 	//kenkyu::gmeshs["monkey"]=uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "monkey-mesh", glm::translate(glm::identity<glm::mat4>(), gvec3(0, 0, 5)));
@@ -280,13 +284,13 @@ void kenkyu::InitGraphics() {
 		kenkyu::colR.reset(new uuu::textureOperator());
 		kenkyu::colL.reset(new uuu::textureOperator());
 		uuu::textureOperator depr, depl;
-		colR->CreateManual(kenkyuVr.ww, kenkyuVr.wh, uuu::textureFormat::rgba16);
-		depr.CreateManual(kenkyuVr.ww, kenkyuVr.wh, uuu::textureFormat::depth16);
+		colR->CreateManual(kenkyuVr.ww, kenkyuVr.wh,GL_RGBA, GL_RGBA,GL_UNSIGNED_BYTE);
+		depr.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH, GL_FLOAT);
 		fboR->AttachTextureOperator(fboR->color0, *colR);
 		fboR->AttachTextureOperator(fboR->depth, depr);
 
-		colL->CreateManual(kenkyuVr.ww, kenkyuVr.wh, uuu::textureFormat::rgba16);
-		depl.CreateManual(kenkyuVr.ww, kenkyuVr.wh, uuu::textureFormat::depth16);
+		colL->CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+		depl.CreateManual(kenkyuVr.ww, kenkyuVr.wh, GL_DEPTH, GL_DEPTH, GL_FLOAT);
 		fboL->AttachTextureOperator(fboL->color0, *colL);
 		fboL->AttachTextureOperator(fboL->depth, depl);
 
@@ -318,6 +322,8 @@ void kenkyu::Terminate() {
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
+
+	FreeImage_DeInitialise();
 
 	log("system was terminated");
 }

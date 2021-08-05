@@ -28,6 +28,8 @@
 #include "newArm.hpp"
 #include "virtualWindow.hpp"
 
+#include "TextureManager.h"
+
 #ifdef _DEBUG
 #pragma comment (lib, "LinearMath_Debug.lib")
 #pragma comment (lib, "BulletCollision_Debug.lib")
