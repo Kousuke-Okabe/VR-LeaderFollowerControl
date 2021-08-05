@@ -186,7 +186,7 @@ void _uuu::textureLoaderByFreeImage::LoadTextureFromFile(const std::string& path
 	//フォーマットデータを補完
 	formatStruct correctedFormats;
 	if (formats)correctedFormats = formats.get();
-	else correctedFormats = std::make_pair(GL_RGBA, GL_RGBA);
+	else correctedFormats = std::make_pair(GL_BGRA, GL_RGBA);
 
 
 	//データを渡す
