@@ -185,7 +185,6 @@ namespace kenkyulocal {
 		//GUIを描画する
 		static void DrawGui();
 
-
 		//VR空間のフレームを描画する
 		static void DrawVrFrame(const uuu::cameraPersp& eye);
 		//VRのフレームにVR空間を書き込む

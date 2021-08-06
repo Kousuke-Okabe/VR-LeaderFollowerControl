@@ -54,7 +54,11 @@ uuu::textureOperator depr, depl;
 void kenkyu::Draw() {
 
 	//内臓モニター用のフレームを作る
-	kenkyu::DrawVrFrame(*kenkyu::specialMeshs.inMonitor->GetFbo(), kenkyu::mainCamera);
+	//kenkyu::DrawVrFrame(*kenkyu::specialMeshs.inMonitor->GetFbo(), kenkyu::mainCamera);
+	kenkyu::specialMeshs.inMonitor->GetFbo()->Bind();
+	kenkyu::DrawGui();
+	kenkyu::specialMeshs.inMonitor->GetFbo()->Unbind();
+
 
 	//ウィンドウのフレームを作る
 	kenkyu::DrawVrFrame(kenkyu::mainCamera);
