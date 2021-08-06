@@ -926,9 +926,10 @@ namespace uuu {
 		GLuint texture;
 		GLuint sampler;
 		GLuint texUnit;
+		bool enable = false;//こいつらが有効か
 		
 		//使用済みテクスチャユニットたち
-		static std::list<GLuint> reservedTexUnits;
+		static std::vector<GLuint> reservedTexUnits;
 
 		//テクスチャを生成する　内部用
 		__int8 __CreateTexture(GLuint texUnit, GLuint width, GLuint height, GLuint format, GLuint informat,GLuint type, void* data = nullptr);
@@ -938,7 +939,7 @@ namespace uuu {
 		//texUnit自動生成する版
 		__int8 CreateManual(GLuint width, GLuint height, GLuint format, GLuint informat, GLuint type,void* data=nullptr);
 		//予約済テクスチャユニットを開放
-		__int8 ReleaseTexUnit(GLuint tar);
+		__int8 ReleaseTexture();
 		//予約済みではないテクスチャユニットを探す
 		static GLuint FindFreeTexUnit();
 
@@ -949,6 +950,8 @@ namespace uuu {
 		GLuint GetTexId()const {
 			return texture;
 		}
+
+		~textureOperator();
 	};
 	//テクスチャローダー
 	class textureLoaderFromImageFile {

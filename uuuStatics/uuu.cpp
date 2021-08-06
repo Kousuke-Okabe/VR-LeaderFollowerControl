@@ -1392,7 +1392,7 @@ __int8 uuu::fontRenderFT::Unbind() {
 	return this->uuu::textureOperator::Unbind();
 }
 
-std::list<GLuint> uuu::textureOperator::reservedTexUnits;//予約済みテクスチャユニット　の本体
+std::vector<GLuint> uuu::textureOperator::reservedTexUnits;//予約済みテクスチャユニット　の本体
 
 __int8 uuu::textureOperator::__CreateTexture(GLuint texUnit, GLuint width, GLuint height, GLuint format, GLuint informat,GLuint type, void* data) {
 
@@ -1430,13 +1430,17 @@ __int8 uuu::textureOperator::__CreateTexture(GLuint texUnit, GLuint width, GLuin
 	glSamplerParameteri(this->sampler, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glSamplerParameteri(this->sampler, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	this->enable = true;
+
 	return true;
 }
 __int8 uuu::textureOperator::CreateManual(GLuint texUnit, GLuint width, GLuint height,GLuint format,GLuint informat, GLuint type,void* data) {
 	//ダブったデータを消す
 	auto ite = std::find(reservedTexUnits.begin(), reservedTexUnits.end(), texUnit);
-	if (ite != reservedTexUnits.end())
-		glDeleteTextures(1, &(ite.operator*()));
+	if (ite != reservedTexUnits.end()) {
+		glDeleteTextures(1, &this->texture);
+		glDeleteSamplers(1, &this->sampler);
+	}
 
 	return __CreateTexture(texUnit, width, height, format, informat,type, data);
 }
@@ -1512,8 +1516,6 @@ GLuint uuu::textureOperator::FindFreeTexUnit() {
 
 	GLuint ret = 0;
 
-	//まずは照準にソート
-	uuu::textureOperator::reservedTexUnits.sort();
 	//次にかぶったら++していけば秋が見つかる
 	for (GLuint& ch : uuu::textureOperator::reservedTexUnits)
 		if (ch == ret)ret++;
@@ -1528,14 +1530,34 @@ GLuint uuu::textureOperator::FindFreeTexUnit() {
 }
 
 
-__int8 uuu::textureOperator::ReleaseTexUnit(GLuint tar) {
+__int8 uuu::textureOperator::ReleaseTexture() {
 
-	uuu::textureOperator::reservedTexUnits.remove(tar);
+	if (!this->enable)return false;
+
+	auto ite = std::find(uuu::textureOperator::reservedTexUnits.begin(), uuu::textureOperator::reservedTexUnits.end(), this->texUnit);
+	uuu::textureOperator::reservedTexUnits.erase(ite);
+
+	glDeleteTextures(1, &this->texture);
+	glDeleteSamplers(1, &this->sampler);
+
+	this->enable = false;
 
 	return true;
 }
 GLuint uuu::textureOperator::GetTexUnit() const{
 	return this->texUnit;
+}
+
+uuu::textureOperator::~textureOperator() {
+	if (!this->enable)return;
+
+	//先に破棄されている可能性もある
+	auto ite = std::find(uuu::textureOperator::reservedTexUnits.begin(), uuu::textureOperator::reservedTexUnits.end(), this->texUnit);
+	if (ite != uuu::textureOperator::reservedTexUnits.end())
+		uuu::textureOperator::reservedTexUnits.erase(ite);
+
+	glDeleteTextures(1, &this->texture);
+	glDeleteSamplers(1, &this->sampler);
 }
 
 __int8 uuu::textureLoaderFromImageFile::CreateTextureFromPNG(const std::string path, uuu::textureOperator& ret,size_t texUnit) {
