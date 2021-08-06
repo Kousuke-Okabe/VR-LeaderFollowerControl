@@ -105,3 +105,69 @@ void uuu::game::texturedMesh::Draw(const std::string& attribName) {
 uuu::game::texturedMesh::texturedMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, glm::mat4 def, const std::string& uniformName, bool skipDrawDef) : super(shader, path, mesh, def, skipDrawDef) {
 	this->uniformName = uniformName;
 }
+
+
+
+
+void uuu::game::virtualWindow::SetupBuffers(uint32_t w, uint32_t h) {
+
+	if (!fbo)fbo.reset(new uuu::frameBufferOperator());
+	if (!col)col.reset(new uuu::textureOperator());
+	if (!dep)dep.reset(new uuu::textureOperator());
+
+
+	col->CreateManual(w, h, GL_RGBA, GL_RGBA, GL_UNSIGNED_BYTE);
+	dep->CreateManual(w, h, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT);
+	fbo->AttachTextureOperator(fbo->color0, *col);
+	fbo->AttachTextureOperator(fbo->depth, *dep);
+
+	fbo->Unbind();
+}
+
+uuu::game::virtualWindow::virtualWindow() :super() {
+
+}
+uuu::game::virtualWindow::virtualWindow(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>shader, const std::string& path, const std::string mesh, uint32_t w, uint32_t h,drawContents contents, glm::mat4 def, const std::string& uniform, bool skipDrawDef) : super(shader, path, mesh, def, uniform, skipDrawDef),contents(contents) {
+	this->SetupBuffers(w, h);
+
+	this->tex = this->col.get();
+}
+uuu::game::virtualWindow::~virtualWindow() {
+	int debug = 0;
+}
+
+//ƒRƒs[
+uuu::game::virtualWindow::virtualWindow(virtualWindow& arg) :super(arg) {
+	this->fbo = std::move(arg.fbo);
+	this->col = std::move(arg.col);
+	this->dep = std::move(arg.dep);
+}
+uuu::game::virtualWindow& uuu::game::virtualWindow::operator=(virtualWindow&& arg) {
+
+	super::operator=(std::move(arg));
+
+	this->fbo = std::move(arg.fbo);
+	this->col = std::move(arg.col);
+	this->dep = std::move(arg.dep);
+
+	return *this;
+}
+
+void uuu::game::virtualWindow::Draw(shaderSettingCall& setting, const std::string& attribName) {
+
+	super::Draw(setting, attribName);
+}
+void uuu::game::virtualWindow::Draw(const std::string& attribName) {
+
+	super::Draw(attribName);
+}
+
+uuu::frameBufferOperator* uuu::game::virtualWindow::GetFbo() {
+	return this->fbo.get();
+}
+
+void uuu::game::virtualWindow::DrawEvent() {
+	this->GetFbo()->Bind();
+	this->contents();
+	this->GetFbo()->Unbind();
+}

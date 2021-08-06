@@ -54,11 +54,7 @@ uuu::textureOperator depr, depl;
 void kenkyu::Draw() {
 
 	//内臓モニター用のフレームを作る
-	//kenkyu::DrawVrFrame(*kenkyu::specialMeshs.inMonitor->GetFbo(), kenkyu::mainCamera);
-	kenkyu::specialMeshs.inMonitor->GetFbo()->Bind();
-	kenkyu::DrawGui();
-	kenkyu::specialMeshs.inMonitor->GetFbo()->Unbind();
-
+	kenkyu::specialMeshs.inMonitor->DrawEvent();
 
 	//ウィンドウのフレームを作る
 	kenkyu::DrawVrFrame(kenkyu::mainCamera);
@@ -265,7 +261,9 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "room-mesh", glm::identity<glm::mat4>()));
 
 	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -4))));
-	kenkyu::specialMeshs.inMonitor = new _uuu::virtualWindow(shaders["virtualWindow"], assets(screen.dae), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
+	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets(screen.dae), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
+		DrawGui();
+		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
 	kenkyu::gmeshs["inMonitor"].reset(kenkyu::specialMeshs.inMonitor);
 
 	log("assets was loaded");

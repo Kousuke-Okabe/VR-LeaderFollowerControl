@@ -26,7 +26,6 @@
 #include <imgui_impl_opengl3.h>
 
 #include "newArm.hpp"
-#include "virtualWindow.hpp"
 
 #include "TextureManager.h"
 
@@ -173,7 +172,7 @@ namespace kenkyulocal {
 
 		//メッシュの参照置き場　かならず所有権をほかに渡すこと
 		struct _specialMeshs {
-			_uuu::virtualWindow* inMonitor;
+			uuu::game::virtualWindow* inMonitor;
 		};
 		static _specialMeshs specialMeshs;
 
