@@ -260,7 +260,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat()));
 	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.ply), "", glm::identity<glm::mat4>()));
 
-	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -4))));
+	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
 	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets(screen.dae), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
 		DrawGui();
 		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
