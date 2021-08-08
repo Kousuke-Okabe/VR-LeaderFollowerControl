@@ -186,10 +186,12 @@ namespace kenkyulocal {
 
 		//VR空間のフレームを描画する
 		static void DrawVrFrame(const uuu::cameraPersp& eye);
-		//VRのフレームにVR空間を書き込む
+		//特定のフレームバッファにVR空間を書き込む
 		static void DrawVrFrame(uuu::frameBufferOperator& fbo, const uuu::cameraPersp& eye);
 		//VRのディスプレイにデータを送る
 		static void TransVrHmd();
+		//HMDの両目をレンダリングしデータ転送を行う
+		static void DrawHmdFrame();
 
 		//コントローラやイベントを処理する
 		static void CallbackVrEvents(vr::VREvent_t event);
@@ -317,6 +319,8 @@ namespace kenkyulocal {
 			return ret;
 		}
 
+		//呼び出しのスパンを計測する(フレームレートを計算できる)
+		static std::chrono::milliseconds GetSpan();
 
 	public:
 

@@ -14,7 +14,6 @@ int main() {
 
 		//ƒƒCƒ“ƒ‹[ƒv
 		while (uuu::app::PollMesageForBind() && kenkyu::continueLoop) {
-
 			kenkyu::Event();
 			kenkyu::Draw();
 		}

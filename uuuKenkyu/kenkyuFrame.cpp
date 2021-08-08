@@ -54,14 +54,7 @@ uuu::textureOperator depr, depl;
 void kenkyu::Draw() {
 
 	//内臓モニター用のフレームを作る
-	kenkyu::specialMeshs.inMonitor->DrawEvent();
-
-	//ウィンドウのフレームを作る
-	kenkyu::DrawVrFrame(kenkyu::mainCamera);
-	//GUIを上から描画
-	kenkyu::DrawGui();
-
-	uuu::app::UpdateForBind();//画面更新
+	//kenkyu::specialMeshs.inMonitor->DrawEvent();
 
 	//VRの両目のフレームを生成する
 	if (kenkyu::systemBootFlags.vr) {
@@ -71,7 +64,13 @@ void kenkyu::Draw() {
 		//VRにデータを転送する
 		kenkyu::TransVrHmd();
 	}
-	
+
+	//ウィンドウのフレームを作る
+	kenkyu::DrawVrFrame(kenkyu::mainCamera);
+	//GUIを上から描画
+	kenkyu::DrawGui();
+
+	//uuu::app::UpdateForBind();//画面更新
 }
 
 glm::mat4 kenkyu::TransVrMatToGmat4(const vr::HmdMatrix34_t& gen) {
@@ -143,6 +142,16 @@ void kenkyu::TransVrHmd() {
 
 	vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture);
 	vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture);
+}
+void kenkyu::DrawHmdFrame() {
+	//VRの両目のフレームを生成する
+	if (kenkyu::systemBootFlags.vr) {
+		kenkyu::DrawVrFrame(*kenkyu::fboR, kenkyu::eyeR);
+		kenkyu::DrawVrFrame(*kenkyu::fboL, kenkyu::eyeL);
+
+		////VRにデータを転送する
+		//kenkyu::TransVrHmd();
+	}
 }
 
 
@@ -607,7 +616,7 @@ void kenkyu::GuiEvents() {
 
 	//windowスタイル
 	ImGui::SetNextWindowPos(ImVec2(windowBounds.first * 0.6, 0));
-	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second*0.5));
+	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second*0.3));
 
 	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.7f, 0.2f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
@@ -644,6 +653,21 @@ void kenkyu::GuiEvents() {
 	}
 	ImGui::End();
 	ImGui::PopStyleColor(2);
+
+	ImGui::SetNextWindowPos(ImVec2(windowBounds.first * 0.6, windowBounds.second * 0.3));
+	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second * 0.2));
+
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.7f, 0.2f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
+	ImGui::Begin("System health");
+	{
+		auto span=kenkyu::GetSpan();
+		ImGui::Text("frame rate");
+		ImGui::Text((std::string(" ") + std::to_string(1.0 / (float)span.count()*1000.0)).c_str());
+	}
+	ImGui::End();
+	ImGui::PopStyleColor(2);
+
 
 	ImGui::SetNextWindowPos(ImVec2(windowBounds.first * 0.6, windowBounds.second * 0.5));
 	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second*0.5));
@@ -1110,3 +1134,14 @@ unsigned int kenkyu::_solverState::GetUpdate() {
 ImVec2 kenkyu::AddImVec2s(const ImVec2& a, const ImVec2& b) {
 	return ImVec2(a.x + b.x, a.y + b.y);
 }
+std::chrono::milliseconds kenkyu::GetSpan() {
+	static std::chrono::time_point bef = std::chrono::system_clock::now();//以前呼び出された時刻
+
+	auto now = std::chrono::system_clock::now();
+
+	auto ret = (now - bef);
+	bef = now;
+
+	return std::chrono::duration_cast<std::chrono::milliseconds>(ret);
+}
+
