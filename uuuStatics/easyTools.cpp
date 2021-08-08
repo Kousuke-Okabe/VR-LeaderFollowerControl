@@ -20,7 +20,7 @@ __int8 uuu::easy::InitNeo3Dmesh() {
 	auto& t = uuu::easy::neo3Dmesh::temp;
 	t.autoNamingTemp.reset(NULL);
 	t.autoUsageTemp.reset(NULL);
-	t.fileLoadFlag = aiProcessPreset_TargetRealtime_MaxQuality;
+	t.fileLoadFlag = aiProcessPreset_TargetRealtime_Fast;
 	t.loadAttribute = 
 		uuu::neoVertexOperators::vboAttachType::positions | 
 		uuu::neoVertexOperators::vboAttachType::indices | 
