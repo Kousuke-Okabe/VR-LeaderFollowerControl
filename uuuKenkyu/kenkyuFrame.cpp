@@ -70,7 +70,7 @@ void kenkyu::Draw() {
 	//GUIを上から描画
 	kenkyu::DrawGui();
 
-	//uuu::app::UpdateForBind();//画面更新
+	uuu::app::UpdateForBind();//画面更新
 }
 
 glm::mat4 kenkyu::TransVrMatToGmat4(const vr::HmdMatrix34_t& gen) {
@@ -663,7 +663,7 @@ void kenkyu::GuiEvents() {
 	{
 		auto span=kenkyu::GetSpan();
 		ImGui::Text("frame rate");
-		ImGui::Text((std::string(" ") + std::to_string(1.0 / (float)span.count()*1000.0)).c_str());
+		ImGui::Text((std::string(" ") + std::to_string(span.count())).c_str());
 	}
 	ImGui::End();
 	ImGui::PopStyleColor(2);
