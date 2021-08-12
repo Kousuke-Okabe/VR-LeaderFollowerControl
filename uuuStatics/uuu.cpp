@@ -50,7 +50,7 @@ __int8 uuu::app::InitUUUAndCreateWindow(const windowProp& prop) {
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)return NULL;
 #endif
-	glfwSwapInterval(0);
+	//glfwSwapInterval(0);
 
 	uuu::app::bind = 0;
 	uuu::app::windows.push_back(window);

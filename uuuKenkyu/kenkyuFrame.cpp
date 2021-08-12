@@ -663,7 +663,7 @@ void kenkyu::GuiEvents() {
 	{
 		auto span=kenkyu::GetSpan();
 		ImGui::Text("frame rate");
-		ImGui::Text((std::string(" ") + std::to_string(span.count())).c_str());
+		ImGui::Text((std::string(" ") + std::to_string(1.0/((double)span.count()/1000.0))).c_str());
 	}
 	ImGui::End();
 	ImGui::PopStyleColor(2);
