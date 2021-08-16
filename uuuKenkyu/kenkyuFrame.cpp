@@ -260,7 +260,7 @@ void kenkyu::InitGraphics() {
 
 	//ステージのメッシュを追加
 	//kenkyu::gmeshs["monkey"]=uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "monkey-mesh", glm::translate(glm::identity<glm::mat4>(), gvec3(0, 0, 5)));
-	kenkyu::gmeshs["rightHand"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightHand-mesh", glm::identity<glm::mat4>(),true));
+	kenkyu::gmeshs["rightHand"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightHand-mesh", glm::identity<glm::mat4>(), true));
 	kenkyu::gmeshs["rightPointer"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightPointer-mesh", glm::identity<glm::mat4>(),false));
 	kenkyu::gmeshs["rightGoo"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightGoo-mesh", glm::identity<glm::mat4>(),true));
 
@@ -268,13 +268,15 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftPointer-mesh", glm::identity<glm::mat4>(),false));
 	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
 	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat()));
-	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "", glm::identity<glm::mat4>()));
+	//kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "", glm::identity<glm::mat4>()));
 
-	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
+	//kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
 	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets(screen.dae), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
 		DrawGui();
 		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
 	kenkyu::gmeshs["inMonitor"].reset(kenkyu::specialMeshs.inMonitor);
+
+	kenkyu::gmeshs["arm"].reset(new uuu::game::mesh(shaders["norm"], assets(arm.dae), "", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
 
 	log("assets was loaded");
 
