@@ -54,7 +54,7 @@ uuu::textureOperator depr, depl;
 void kenkyu::Draw() {
 
 	//内臓モニター用のフレームを作る
-	//kenkyu::specialMeshs.inMonitor->DrawEvent();
+	kenkyu::specialMeshs.inMonitor->DrawEvent();
 
 	//VRの両目のフレームを生成する
 	if (kenkyu::systemBootFlags.vr) {
