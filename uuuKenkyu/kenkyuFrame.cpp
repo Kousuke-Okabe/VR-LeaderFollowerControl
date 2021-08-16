@@ -212,6 +212,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	
 	uuu::app::windowProp prop(kenkyu::windowBounds.first, kenkyu::windowBounds.second, "Ume's kenkyu");
 	prop.enableBorder = false;
+	prop.swapInterval = properties.swapInterval;
 	uuu::easy::Init(prop, uuu::neoVertexOperators::positions | uuu::neoVertexOperators::norms | uuu::neoVertexOperators::indices | uuu::neoVertexOperators::texCoords0);
 	
 		
@@ -835,6 +836,14 @@ void kenkyu::GetProperty(const std::string& path) {
 
 	}
 
+	if (boost::optional<unsigned int> swapintervaldt = pt.get_optional<unsigned int>("kenkyu.setup.system.<xmlattr>.swapInterval")) {
+		properties.swapInterval = swapintervaldt.get();
+		kenkyu::log("property \"swap interval\" = " + std::to_string(properties.swapInterval), logDebug);
+	}
+	else {
+		properties.swapInterval = 0;
+		log("not found \"swap interval\" property. default value = 0", logDebug);
+	}
 
 	return;
 }

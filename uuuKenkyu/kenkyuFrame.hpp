@@ -79,6 +79,9 @@ namespace kenkyulocal {
 			double pd;//瞳孔間距離
 
 			std::string assetpath;//アセットまでのパス
+
+			unsigned int swapInterval;//同期を待つ回数
+
 			double windowSizeRatio;//VRの解像度とシステムウィンドウとの大きさの比率
 
 			std::string serialPort;//シリアルポート名

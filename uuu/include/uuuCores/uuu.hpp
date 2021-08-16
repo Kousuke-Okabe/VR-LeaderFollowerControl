@@ -376,6 +376,9 @@ namespace uuu {
 			//ウィンドウ位置;
 			boost::optional<glm::ivec2> windowPos;
 
+			//バッファのスワップ待機数
+			boost::optional<unsigned int> swapInterval;
+
 			windowProp(int _width, int _height, std::string _title, bool Inheritance = false);
 			windowProp(int _width, int _height, std::string _title, GLFWmonitor* _monitor, bool Inheritance = false);
 		};
