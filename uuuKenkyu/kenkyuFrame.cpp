@@ -7,7 +7,7 @@ using namespace Eigen;
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
-typename std::unordered_map<std::string, std::unique_ptr<uuu::game::mesh>> kenkyu::gmeshs;
+typename std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> kenkyu::gmeshs;
 std::unordered_map<std::string,std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> kenkyu::shaders;
 std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> kenkyu::textures;
 uuu::cameraPersp kenkyu::mainCamera, kenkyu::eyeR, kenkyu::eyeL;
@@ -248,35 +248,42 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs.clear();
 
 	//無地シェーダを用意
-	kenkyu::shaders["norm"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/norm)));
-	kenkyu::shaders["virtualWindow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/virtualWindow)));
-	kenkyu::shaders["rainbow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets(shaders/rainbow)));
+	kenkyu::shaders["norm"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/norm")));
+	kenkyu::shaders["red"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/redNorm")));
+	kenkyu::shaders["virtualWindow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/virtualWindow")));
+	kenkyu::shaders["rainbow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/rainbow")));
 
 	//テクスチャを用意
 	//uuu::textureLoaderFromImageFile load;
 	textures["cat"].reset(new uuu::textureOperator());
 	//load.CreateTextureFromPNG(assets(cat.png), *textures.at("cat").get());
-	_uuu::textureLoaderByFreeImage::LoadTextureFromFile(assets(cat.png), *textures.at("cat").get());
+	_uuu::textureLoaderByFreeImage::LoadTextureFromFile(assets("cat.png"), *textures.at("cat").get());
 
 	//ステージのメッシュを追加
 	//kenkyu::gmeshs["monkey"]=uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "monkey-mesh", glm::translate(glm::identity<glm::mat4>(), gvec3(0, 0, 5)));
-	kenkyu::gmeshs["rightHand"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightHand-mesh", glm::identity<glm::mat4>(), true));
-	kenkyu::gmeshs["rightPointer"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightPointer-mesh", glm::identity<glm::mat4>(),false));
-	kenkyu::gmeshs["rightGoo"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "rightGoo-mesh", glm::identity<glm::mat4>(),true));
+	kenkyu::gmeshs["rightHand"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "rightHand-mesh", glm::identity<glm::mat4>(), true));
+	kenkyu::gmeshs["rightPointer"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "rightPointer-mesh", glm::identity<glm::mat4>(), false));
+	kenkyu::gmeshs["rightGoo"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "rightGoo-mesh", glm::identity<glm::mat4>(), true));
 
-	kenkyu::gmeshs["leftHand"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftHand-mesh", glm::identity<glm::mat4>(),true));
-	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftPointer-mesh", glm::identity<glm::mat4>(),false));
-	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
-	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "cat-mesh", kenkyu::reference.toMat()));
+	kenkyu::gmeshs["leftHand"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftHand-mesh", glm::identity<glm::mat4>(), true));
+	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftPointer-mesh", glm::identity<glm::mat4>(), false));
+	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
+	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "cat-mesh", kenkyu::reference.toMat()));
 	//kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "", glm::identity<glm::mat4>()));
 
 	//kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
-	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets(screen.dae), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
+	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets("screen.dae"), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
 		DrawGui();
 		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
 	kenkyu::gmeshs["inMonitor"].reset(kenkyu::specialMeshs.inMonitor);
 
-	kenkyu::gmeshs["arm"].reset(new uuu::game::mesh(shaders["norm"], assets(arm.dae), "", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
+	/*
+	kenkyu::gmeshs["armb"].reset(new uuu::game::mesh(shaders["rainbow"], assets("arm.dae"), "base-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
+	kenkyu::gmeshs["arm0"].reset(new uuu::game::mesh(shaders["norm"], assets("arm.dae"), "link0-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
+	kenkyu::gmeshs["arm1"].reset(new uuu::game::mesh(shaders["rainbow"], assets("arm.dae"), "link1-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
+	kenkyu::gmeshs["arm2"].reset(new uuu::game::mesh(shaders["norm"], assets("arm.dae"), "link2-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
+	*/
+	kenkyu::gmeshs["arm"].reset(new kenkyuArmMeshSet(&shaders,glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
 
 	log("assets was loaded");
 
@@ -1154,5 +1161,9 @@ std::chrono::milliseconds kenkyu::GetSpan() {
 	bef = now;
 
 	return std::chrono::duration_cast<std::chrono::milliseconds>(ret);
+}
+
+std::string kenkyu::assets(const std::string& details) {
+	return properties.assetpath + details;
 }
 

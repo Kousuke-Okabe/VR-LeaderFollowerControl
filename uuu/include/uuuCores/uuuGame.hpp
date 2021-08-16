@@ -11,27 +11,37 @@ namespace uuu {
 	//eazyに依存しつつある
 
 	namespace game {
-		class mesh {
+
+		//描画可能なクラスの基底
+		class drawable {
+		protected:
+			glm::mat4 transform;
+		public:
+			bool skipDraw;//描画をスキップする
+
+			virtual ~drawable();
+			virtual void Draw(const std::string& attribName = "modelTransform") = 0;
+		
+			void SetTransform(const glm::mat4& tr);
+			glm::mat4& GetTransform();
+		};
+
+		class mesh :public drawable {
 
 		protected:
 			uuu::easy::neo3Dmesh inner;
-			glm::mat4 transform;
 
 		public:
-			bool skipDraw;//描画をスキップする
 
 			using shaderSettingCall = std::function<void(std::weak_ptr<uuu::shaderProgramObjectVertexFragment>)>;
 
 			mesh();
 			mesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh);
-			mesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh,glm::mat4 def,bool skipDrawDef=false);
+			mesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 def, bool skipDrawDef = false);
 
-			void SetTransform(const glm::mat4& tr);
-
-			glm::mat4& GetTransform();
 			uuu::easy::neo3Dmesh& GetMesh();
 
-			virtual void Draw(shaderSettingCall&setting,const std::string& attribName="modelTransform");
+			virtual void Draw(shaderSettingCall& setting, const std::string& attribName = "modelTransform");
 			virtual void Draw(const std::string& attribName = "modelTransform");
 
 			virtual ~mesh();

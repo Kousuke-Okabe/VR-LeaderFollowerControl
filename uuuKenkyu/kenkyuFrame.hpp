@@ -26,6 +26,7 @@
 #include <imgui_impl_opengl3.h>
 
 #include "newArm.hpp"
+#include "kenkyuArmMeshes.hpp"
 
 #include "TextureManager.h"
 
@@ -42,7 +43,7 @@
 #endif
 
 namespace kenkyulocal {
-#define assets(name) properties.assetpath+#name
+//#define assets(name) properties.assetpath+#name
 
 	//Œ¤‹†‚ÅŽg‚¤˜r
 	class kenkyuArm : public newarm::armSolver<double, 6, 7> {
@@ -107,7 +108,7 @@ namespace kenkyulocal {
 
 		static uuu::vrMgr kenkyuVr;
 		//static std::vector<uuu::easy::neo3Dmesh> meshs;
-		static std::unordered_map<std::string, std::unique_ptr<uuu::game::mesh>> gmeshs;
+		static std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> gmeshs;
 		static std::unordered_map<std::string, std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> shaders;
 		static std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> textures;
 
@@ -367,6 +368,8 @@ namespace kenkyulocal {
 		static bool GetYorN();
 
 		static void SaveALog(std::string);
+		
+		static std::string assets(const std::string& details);
 
 	};
 

@@ -1,6 +1,10 @@
 #include "uuuGame.hpp"
 using namespace std;
 
+uuu::game::drawable::~drawable() {
+
+}
+
 uuu::game::mesh::mesh() {
 	this->transform = glm::identity<glm::mat4>();
 
@@ -17,11 +21,11 @@ uuu::game::mesh::mesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> sh
 	this->skipDraw = skipDrawDef;
 }
 
-void uuu::game::mesh::SetTransform(const glm::mat4& tr) {
+void uuu::game::drawable::SetTransform(const glm::mat4& tr) {
 	this->transform = tr;
 }
 
-glm::mat4& uuu::game::mesh::GetTransform() {
+glm::mat4& uuu::game::drawable::GetTransform() {
 	return this->transform;
 }
 
