@@ -283,7 +283,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["arm1"].reset(new uuu::game::mesh(shaders["rainbow"], assets("arm.dae"), "link1-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
 	kenkyu::gmeshs["arm2"].reset(new uuu::game::mesh(shaders["norm"], assets("arm.dae"), "link2-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
 	*/
-	kenkyu::gmeshs["arm"].reset(new kenkyuArmMeshSet(&shaders,glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
+	kenkyu::gmeshs["arm"].reset(new kenkyuArmMeshSet(&shaders,glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1.5, -1.5))));
 
 	log("assets was loaded");
 

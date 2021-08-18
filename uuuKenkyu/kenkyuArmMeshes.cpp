@@ -22,8 +22,8 @@ void kenkyulocal::kenkyuArmMeshSet::Draw(const std::string& attribName) {
 void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const glm::vec3& angles) {
 	//それぞれのボーン情報　base-b0-link0-b1-link1-b2-link2
 	const glm::mat4 b0 = this->transform;
-	const glm::mat4 b1 = glm::translate(glm::vec3(0, 0.2, 0));
-	const glm::mat4 b2 = glm::translate(glm::vec3(0, 0.6, 0));
+	const glm::mat4 b1 = glm::translate(glm::vec3(0, -0.2, 0));
+	const glm::mat4 b2 = glm::translate(glm::vec3(0, -0.6, 0));
 
 	//ローカル変形
 	const glm::mat4 l0 = glm::rotate(angles[0], glm::vec3(0, 1, 0));
