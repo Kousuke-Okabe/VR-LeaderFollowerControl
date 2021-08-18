@@ -1167,3 +1167,13 @@ std::string kenkyu::assets(const std::string& details) {
 	return properties.assetpath + details;
 }
 
+kenkyuArm::Vector6d kenkyu::GetMoterAngles() {
+
+	return kenkyu::arm.GetNowQ();
+}
+
+
+
+
+
+

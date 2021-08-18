@@ -62,6 +62,7 @@ namespace kenkyulocal {
 	//卒研のフレームシングルトン
 	class kenkyu {
 	public:
+
 		struct posAndQuat {
 			glm::vec3 pos;
 			glm::quat quat;
@@ -370,6 +371,9 @@ namespace kenkyulocal {
 		static void SaveALog(std::string);
 		
 		static std::string assets(const std::string& details);
+
+		//モーターの回転角を出す　ないときは例外
+		static kenkyuArm::Vector6d GetMoterAngles();
 
 	};
 
