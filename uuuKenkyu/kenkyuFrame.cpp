@@ -176,29 +176,35 @@ void kenkyu::BootUuuSetForKekyu() {
 	kenkyu::log(ss.str(), kenkyu::logSaved);
 
 	//シリアルポートに接続
-	try {
-		kenkyu::armMgr.reset(new umeArmTransfer(properties.serialPort));
-		kenkyu::log("Serial port was connected");
-		kenkyu::systemBootFlags.serial = true;
+	if (properties.enableSerialSystem) {
+		try {
+			kenkyu::armMgr.reset(new umeArmTransfer(properties.serialPort));
+			kenkyu::log("Serial port was connected");
+			kenkyu::systemBootFlags.serial = true;
+		}
+		catch (std::exception& ex) {
+			log("シリアルポートへのアクセスでエラーが発生しました。当該部分を無効化して続行しますか?", kenkyu::logError);
+			if (GetYorN());
+			else throw ex;
+		}
 	}
-	catch (std::exception& ex) {
-		log("シリアルポートへのアクセスでエラーが発生しました。当該部分を無効化して続行しますか?", kenkyu::logError);
-		if (GetYorN());
-		else throw ex;
-	}
+	else kenkyu::log("Surpress arm transfer system by \"enable Serial = false\"");
 
 	//VRを接続
-	try {
-		kenkyuVr.InitVr();
-		kenkyu::systemBootFlags.vr = true;
+	if (properties.enableVrSystem) {
+		try {
+			kenkyuVr.InitVr();
+			log("VR system was started");
+			kenkyu::systemBootFlags.vr = true;
+		}
+		catch (uuu::vr_exception& ex) {
+			log("VRシステムへの接続でエラーが発生しました。当該部分を無効化して続行しますか?", kenkyu::logError);
+			if (GetYorN());
+			else throw ex;
+		}
 	}
-	catch (uuu::vr_exception& ex) {
-		log("VRシステムへの接続でエラーが発生しました。当該部分を無効化して続行しますか?", kenkyu::logError);
-		if (GetYorN());
-		else throw ex;
-	}
+	kenkyu::log("Surpress VR system by \"enable VR = false\"");
 
-	log("VR system was started");
 
 	//UUUのウィンドウをVRの画面サイズの半分に合わせて作る
 	if (kenkyu::systemBootFlags.vr) {
@@ -242,6 +248,8 @@ void kenkyu::BootUuuSetForKekyu() {
 }
 
 void kenkyu::InitGraphics() {
+
+	log("Now loading...");
 
 	//適当に初期化して
 	kenkyu::shaders.clear();
@@ -852,6 +860,23 @@ void kenkyu::GetProperty(const std::string& path) {
 	else {
 		properties.swapInterval = 0;
 		log("not found \"swap interval\" property. default value = 0", logDebug);
+	}
+
+	if (boost::optional<bool> enableVrdt = pt.get_optional<bool>("kenkyu.setup.system.<xmlattr>.enableVR")) {
+		properties.enableVrSystem = enableVrdt.get();
+		kenkyu::log("property \"enable VR\" = " + std::to_string(properties.enableVrSystem), logDebug);
+	}
+	else {
+		properties.enableVrSystem = true;
+		log("not found \"enable VR\" property. default value = true", logDebug);
+	}
+	if (boost::optional<bool> enableSerialdt = pt.get_optional<bool>("kenkyu.setup.system.<xmlattr>.enableSerial")) {
+		properties.enableSerialSystem = enableSerialdt.get();
+		kenkyu::log("property \"enable Serial\" = " + std::to_string(properties.enableSerialSystem), logDebug);
+	}
+	else {
+		properties.enableSerialSystem = true;
+		log("not found \"enable Serial\" property. default value = true", logDebug);
 	}
 
 	return;

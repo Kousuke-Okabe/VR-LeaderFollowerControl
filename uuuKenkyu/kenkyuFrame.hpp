@@ -48,7 +48,7 @@ namespace kenkyulocal {
 //#define assets(name) properties.assetpath+#name
 
 	//研究で使う腕
-	class kenkyuArm : public newarm::armSolver<double, 6, 7> {
+	class kenkyuArm : public armJointSolver::armSolver<double, 6, 7> {
 	public:
 
 		//6自由度アーム
@@ -98,6 +98,9 @@ namespace kenkyulocal {
 
 			std::string glslVersion;
 			bool autoSkip;
+
+			bool enableVrSystem;//VRシステムを有効化する
+			bool enableSerialSystem;//シリアル通信を有効化する
 		};
 		static _properties properties;
 		//サブシステムの起動状態を保存
