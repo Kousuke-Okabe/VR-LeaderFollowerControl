@@ -27,7 +27,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include "newArm.hpp"
+#include "armJointSolver.hpp"
 #include "kenkyuArmMeshes.hpp"
 
 #include "TextureManager.h"
