@@ -45,25 +45,14 @@
 #endif
 
 namespace kenkyulocal {
-//#define assets(name) properties.assetpath+#name
-
-	//研究で使う腕
-	class kenkyuArm : public armJointSolver::armSolver<double, 6, 7> {
-	public:
-
-		//6自由度アーム
-		using Vector6d = Eigen::Matrix<double, 6, 1>;
-		using Vector7d = Eigen::Matrix<double, 7, 1>;
-		static Vector7d fjikken(const Vector6d& q);
-	
-		kenkyuArm(const Vector6d& defQ);
-
-	};
 
 
 	//卒研のフレームシングルトン
 	class kenkyu {
 	public:
+
+		using Vector7 = Eigen::Matrix<double, 7, 1>;
+		using Vector6 = Eigen::Matrix<double, 6, 1>;
 
 		struct posAndQuat {
 			glm::vec3 pos;
@@ -125,7 +114,7 @@ namespace kenkyulocal {
 
 		static std::chrono::system_clock::time_point origin;//開始時間
 
-		static std::unique_ptr<umeArmTransfer> armMgr;//アームへの転送を行う
+		static std::unique_ptr<umeArmTransfer> armTransferMgr;//アームへの転送を行う
 
 		static glm::vec3 hmdPos;//ヘッドセットの位置
 
@@ -138,7 +127,8 @@ namespace kenkyulocal {
 		static std::unique_ptr<boost::thread> solverThread;//ソルバーを動かすスレッド
 		static bool N_killSover;//ソルバーを殺すフラグ
 
-		static kenkyuArm arm;
+		//static kenkyuArm arm;
+		static std::unique_ptr<armJointSolver::armInverseKineticsSolverForKenkyu<double,6,7>> armSolver;
 		static std::mutex mutexRefPoint;//アーム目標値の占有
 
 		struct _actionWarehouse {
@@ -224,6 +214,7 @@ namespace kenkyulocal {
 
 		//運動学を解く
 		static void _deleted_SolveAngles();//目標値まで近付けてから転送するver
+		static void _deleted2_SolveAngles();
 		static void SolveAngles();
 
 		//アーム用に角度の値域を制限して返す
@@ -332,6 +323,9 @@ namespace kenkyulocal {
 		//呼び出しのスパンを計測する(フレームレートを計算できる)
 		static std::chrono::milliseconds GetSpan();
 
+		//アームの順運動学
+		static Vector7 fjikken(const Vector6& q);
+
 	public:
 
 		static bool continueLoop;//ループを続けるフラグ　メインループで監視して
@@ -378,7 +372,7 @@ namespace kenkyulocal {
 		static std::string assets(const std::string& details);
 
 		//モーターの回転角を出す　ないときは例外
-		static kenkyuArm::Vector6d GetMoterAngles();
+		static Vector6 GetMoterAngles();
 
 	};
 

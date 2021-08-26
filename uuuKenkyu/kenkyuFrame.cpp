@@ -19,7 +19,7 @@ kenkyu::_systemBootFlags kenkyu::systemBootFlags;
 
 kenkyu::_actionWarehouse kenkyu::actionWarehouse;
 
-std::unique_ptr<umeArmTransfer> kenkyu::armMgr;
+std::unique_ptr<umeArmTransfer> kenkyu::armTransferMgr;
 
 glm::vec3 kenkyu::hmdPos;
 //std::list<boost::thread> kenkyu::serialWriteThreads;
@@ -30,8 +30,9 @@ std::unique_ptr<boost::thread> kenkyu::logThread;
 kenkyu::posAndQuat kenkyu::beforePosR, kenkyu::beforeposL;
 kenkyu::posAndQuat kenkyu::reference;
 
-kenkyulocal::kenkyuArm kenkyu::arm(kenkyuArm::Vector6d::Zero());
+//kenkyulocal::kenkyuArm kenkyu::arm(kenkyuArm::Vector6d::Zero());
 std::mutex kenkyu::mutexRefPoint;
+std::unique_ptr<armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>> kenkyu::armSolver;
 
 bool kenkyu::N_killSover;
 
@@ -178,7 +179,8 @@ void kenkyu::BootUuuSetForKekyu() {
 	//シリアルポートに接続
 	if (properties.enableSerialSystem) {
 		try {
-			kenkyu::armMgr.reset(new umeArmTransfer(properties.serialPort));
+
+			kenkyu::armTransferMgr.reset(new umeArmTransfer(properties.serialPort));
 			kenkyu::log("Serial port was connected");
 			kenkyu::systemBootFlags.serial = true;
 		}
@@ -239,7 +241,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	FreeImage_Initialise();
 
 	//トルクを入れる
-	if (kenkyu::systemBootFlags.serial)kenkyu::armMgr->Torque(255, 1);
+	if (kenkyu::systemBootFlags.serial)kenkyu::armTransferMgr->Torque(255, 1);
 
 	//ソルバーを起動
 	if (kenkyu::systemBootFlags.serial)solverThread.reset(new boost::thread(kenkyu::SolveAngles));
@@ -646,7 +648,7 @@ void kenkyu::GuiEvents() {
 		ImGui::Text((" " + to_string(kenkyu::reference.quat.x) + "," + to_string(kenkyu::reference.quat.y) + "," + to_string(kenkyu::reference.quat.z) + "," + to_string(kenkyu::reference.quat.w)).c_str());
 		ImGui::Text("moter positions");
 		if (kenkyu::systemBootFlags.serial) {
-			auto sendAngle = ToDegreeFrom10TimesDegree<int, 6>(ToHutabaDegreeFromRadiansVec(CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec<double, 6>(arm.GetNowQ())))));
+			auto sendAngle = ToDegreeFrom10TimesDegree<int, 6>(ToHutabaDegreeFromRadiansVec(CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec<double, 6>(kenkyu::GetMoterAngles())))));
 			for (size_t m = 1; m <= 6; m++)
 				ImGui::Text((" m" + to_string(m) + ": " + to_string(sendAngle(m - 1)) + "deg").c_str());
 		}
@@ -699,14 +701,14 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.6f, 0.1f, 0.1f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 
 			if (ImGui::Button("Emergency", ImVec2(windowBounds.first * 0.4 * 1.0, windowBounds.second * 0.5 * 0.25))&&kenkyu::systemBootFlags.serial)
-				kenkyu::armMgr->Torque(255, 0);//緊急停止ボタン
+				kenkyu::armTransferMgr->Torque(255, 0);//緊急停止ボタン
 			ImGui::PopStyleColor(2);
 
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 7.0f, 0.2f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.3f, 0.1f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			auto retorquePos = ImGui::GetCursorPos();
 			if (ImGui::Button("Retorque", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25)) && kenkyu::systemBootFlags.serial)
-				kenkyu::armMgr->Torque(255, 1);//再トルク印加ボタン
+				kenkyu::armTransferMgr->Torque(255, 1);//再トルク印加ボタン
 			ImGui::PopStyleColor(2);
 			
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.7f, 1.0f));
@@ -718,7 +720,7 @@ void kenkyu::GuiEvents() {
 				kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
 				kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
 
-				kenkyu::armMgr->Move(255, 0, 500);
+				kenkyu::armTransferMgr->Move(255, 0, 500);
 			}
 			ImGui::PopStyleColor(2);
 
@@ -921,7 +923,7 @@ template<typename T>T signNot0(const T& a) {
 	return (a > 0.0) ? 1.0 : -1.0;
 }
 
-kenkyulocal::kenkyuArm::Vector7d kenkyulocal::kenkyuArm::fjikken(const kenkyulocal::kenkyuArm::Vector6d& q) {
+kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
 
 	//実験装置に合わせたアーム()
 	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
@@ -1035,56 +1037,110 @@ void kenkyu::_deleted_SolveAngles() {
 	*/
 }
 
+void kenkyu::_deleted2_SolveAngles() {
+
+	//const kenkyulocal::kenkyuArm::Vector7d kvec(1, 1, 1, 1, 1, 1, 1);
+
+	//while (kenkyu::N_killSover) {
+
+	//	//リファレンスを設定
+	//	{
+	//		std::lock_guard<std::mutex> lock(mutexRefPoint);
+	//		arm.SetRef(kenkyuArm::Vector7d(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z, reference.quat.w));
+	//	}
+
+	//	//姿勢が目標から遠ければ解析を実施する
+	//	if (!CheckNearRefToNowArmPosAndQuat(arm.GetDistPosAndQuat())) {
+	//		kenkyulocal::kenkyuArm::Vector6d next, hold;//次の角度と今の角度
+
+	//		//解析
+	//		hold = arm.GetNowQ();//解析前の角度を取得
+	//		next = arm.GetNextQ(kvec);//nextはトルク
+
+	//		
+	//		//フォーマットをそろえる
+	//		//二つの値の値域を整える　0~2piにする　値域を中央に寄せる +-pi->値域を制限する +-150度(単位はラジアン)
+	//		auto correctedHold = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(hold)));
+	//		auto correctedNext = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(next)));
+
+	//		//解析前角度と現在角度から偏角に比例した時間を計算する
+	//		auto distAngle = correctedNext - correctedHold;
+	//		array<double, 6> angleWait;
+	//		for (size_t i = 0; i < 6; i++)
+	//			angleWait.at(i) = fabs(distAngle(i)) * (properties.baseVelocity / M_PI) * properties.armVelocitycoefficients.at(i);
+	//		auto maxWait = std::max_element(angleWait.begin(), angleWait.end());//待機時間の最大を出す
+
+	//		//安定してきたら角度を送信する
+	//		for (size_t m = 1; m <= 6; m++)
+	//			kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransferMgr.get(), m, ToHutabaDegreeFromRadians(correctedNext(m - 1)), angleWait.at(m - 1)));
+
+	//		//更新にカウントをセットする
+	//		kenkyu::solverState.SetUpdate(3);
+
+	//		//角度変化を出す
+	//		auto now = std::chrono::system_clock::now();
+	//		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
+	//		kenkyu::log<double, 6>(to_string(count), correctedNext * (180.0 / M_PI), kenkyu::logSaved, " ");
+
+	//		//一番遅い角度までまつ センチ秒なのでミリ秒単位に
+	//		std::this_thread::sleep_for(std::chrono::milliseconds((unsigned int)(maxWait.operator*() * 10.0)));
+	//		for (size_t m = 0; m < 6; m++)
+	//			kenkyu::serialWriteThreads.at(m)->join();//スレッドを開放
+	//		
+	//	}
+	//	//近ければしばらく待つ
+	//	else std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+
+	//}
+}
+
 void kenkyu::SolveAngles() {
 
-	const kenkyulocal::kenkyuArm::Vector7d kvec(1, 1, 1, 1, 1, 1, 1);
+	using VectorC = Eigen::Matrix<double, 7, 1>;
 
+	//ソルバーを構成
+	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikken));
+
+	//ループのスパンを取るための時間
+	size_t beforeTimepoint=uuu::app::GetTimeFromInit();
+
+	VectorC ref;
 	while (kenkyu::N_killSover) {
 
-		//リファレンスを設定
+		//リファレンスを読み込み
 		{
 			std::lock_guard<std::mutex> lock(mutexRefPoint);
-			arm.SetRef(kenkyuArm::Vector7d(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z, reference.quat.w));
+			ref = VectorC(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z, reference.quat.w);
 		}
 
+		auto beforeAngles = armSolver->GetAngles();
+		armSolver->SolverStep(ref);//解析
 		//姿勢が目標から遠ければ解析を実施する
-		if (!CheckNearRefToNowArmPosAndQuat(arm.GetDistPosAndQuat())) {
-			kenkyulocal::kenkyuArm::Vector6d next, hold;//次の角度と今の角度
-
-			//解析
-			hold = arm.GetNowQ();//解析前の角度を取得
-			next = arm.GetNextQ(kvec);//nextはトルク
-
-			
+		auto jointAngles = armSolver->GetAngles();
+		if (true) {
 			//フォーマットをそろえる
 			//二つの値の値域を整える　0~2piにする　値域を中央に寄せる +-pi->値域を制限する +-150度(単位はラジアン)
-			auto correctedHold = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(hold)));
-			auto correctedNext = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(next)));
+			auto correctedAngles = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(jointAngles)));
 
-			//解析前角度と現在角度から偏角に比例した時間を計算する
-			auto distAngle = correctedNext - correctedHold;
-			array<double, 6> angleWait;
-			for (size_t i = 0; i < 6; i++)
-				angleWait.at(i) = fabs(distAngle(i)) * (properties.baseVelocity / M_PI) * properties.armVelocitycoefficients.at(i);
-			auto maxWait = std::max_element(angleWait.begin(), angleWait.end());//待機時間の最大を出す
-
-			//安定してきたら角度を送信する
-			for (size_t m = 1; m <= 6; m++)
-				kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armMgr.get(), m, ToHutabaDegreeFromRadians(correctedNext(m - 1)), angleWait.at(m - 1)));
+			//スパンを取る 単位はセンチ秒
+			auto nowTimepoint = uuu::app::GetTimeFromInit();
+			size_t span = (nowTimepoint - beforeTimepoint)/10;
+			beforeTimepoint = nowTimepoint;
+			//角度を送信する
+			for (size_t m = 1; m <= 6; m++) {
+				if (kenkyu::serialWriteThreads.at(m - 1)->joinable())kenkyu::serialWriteThreads.at(m - 1)->join();//スレッドを開放
+				kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransferMgr.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
+			}
 
 			//更新にカウントをセットする
 			kenkyu::solverState.SetUpdate(3);
 
-			//角度変化を出す
+			//ログファイルに書き込む
 			auto now = std::chrono::system_clock::now();
 			auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
-			kenkyu::log<double, 6>(to_string(count), correctedNext * (180.0 / M_PI), kenkyu::logSaved, " ");
+			kenkyu::log<double, 6>(to_string(count), correctedAngles, kenkyu::logSaved, " ");
 
-			//一番遅い角度までまつ センチ秒なのでミリ秒単位に
-			std::this_thread::sleep_for(std::chrono::milliseconds((unsigned int)(maxWait.operator*() * 10.0)));
-			for (size_t m = 0; m < 6; m++)
-				kenkyu::serialWriteThreads.at(m)->join();//スレッドを開放
-			
 		}
 		//近ければしばらく待つ
 		else std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -1092,9 +1148,6 @@ void kenkyu::SolveAngles() {
 
 	}
 }
-
-
-kenkyulocal::kenkyuArm::kenkyuArm(const Vector6d& defQ):armSolver(defQ, kenkyulocal::kenkyuArm::fjikken){}
 
 bool kenkyu::GetYorN() {
 
@@ -1192,9 +1245,11 @@ std::string kenkyu::assets(const std::string& details) {
 	return properties.assetpath + details;
 }
 
-kenkyuArm::Vector6d kenkyu::GetMoterAngles() {
+kenkyu::Vector6 kenkyu::GetMoterAngles() {
+	if(systemBootFlags.serial)
+		return kenkyu::armSolver->GetAngles();
 
-	return kenkyu::arm.GetNowQ();
+	return Vector6::Zero();
 }
 
 
