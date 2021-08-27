@@ -52,6 +52,9 @@ uuu::textureOperator depr, depl;
 
 //std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
 
+std::mutex kenkyu::solverSpanRateShareMutex;
+double kenkyu::solverSpanRateShare;
+
 void kenkyu::Draw() {
 
 	//内臓モニター用のフレームを作る
@@ -643,9 +646,9 @@ void kenkyu::GuiEvents() {
 	ImGui::Begin("Arm health");
 	{
 		ImGui::Text("reference pos");
-		ImGui::Text((" " + to_string(kenkyu::reference.pos.x) + "," + to_string(kenkyu::reference.pos.y) + "," + to_string(kenkyu::reference.pos.z)).c_str());
+		ImGui::Text((" " + to_stringf(kenkyu::reference.pos.x) + "," + to_stringf(kenkyu::reference.pos.y) + "," + to_stringf(kenkyu::reference.pos.z)).c_str());
 		ImGui::Text("reference quat");
-		ImGui::Text((" " + to_string(kenkyu::reference.quat.x) + "," + to_string(kenkyu::reference.quat.y) + "," + to_string(kenkyu::reference.quat.z) + "," + to_string(kenkyu::reference.quat.w)).c_str());
+		ImGui::Text((" " + to_stringf(kenkyu::reference.quat.x) + "," + to_stringf(kenkyu::reference.quat.y) + "," + to_stringf(kenkyu::reference.quat.z) + "," + to_stringf(kenkyu::reference.quat.w)).c_str());
 		ImGui::Text("moter positions");
 		if (kenkyu::systemBootFlags.serial) {
 			auto sendAngle = ToDegreeFrom10TimesDegree<int, 6>(ToHutabaDegreeFromRadiansVec(CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec<double, 6>(kenkyu::GetMoterAngles())))));
@@ -681,9 +684,18 @@ void kenkyu::GuiEvents() {
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
 	ImGui::Begin("System health");
 	{
-		auto span=kenkyu::GetSpan();
-		ImGui::Text("frame rate");
-		ImGui::Text((std::string(" ") + std::to_string(1.0/((double)span.count()/1000.0))).c_str());
+		auto mainSpan=kenkyu::GetSpan();
+		ImGui::Text("main span rate(FPS)");
+		ImGui::Text((std::string(" ") + to_stringf(1.0/((double)mainSpan.count()/1000.0))).c_str());
+
+		double solverSpan;//単位はセンチ秒
+		{
+			std::lock_guard<std::mutex> lock(solverSpanRateShareMutex);
+			solverSpan = solverSpanRateShare;
+		}
+		ImGui::Text("solver span rate");
+		if (systemBootFlags.serial) ImGui::Text((std::string(" ") + to_stringf(1.0 / (solverSpan / 100.0))).c_str());
+		else ImGui::Text(" Not booted yet.");
 	}
 	ImGui::End();
 	ImGui::PopStyleColor(2);
@@ -909,6 +921,8 @@ void kenkyu::InitAnyMembers() {
 	kenkyu::N_killSover = true;//!false よってtrue
 
 	kenkyu::continueLoop = true;
+
+	solverSpanRateShare = 0.0;
 }
 
 glm::mat4 kenkyu::posAndQuat::toMat() {
@@ -1115,7 +1129,7 @@ void kenkyu::SolveAngles() {
 		}
 
 		auto beforeAngles = armSolver->GetAngles();
-		armSolver->SolverStep(ref);//解析
+		armSolver->SolverStep(ref, 1.0 / 16.0);//解析
 		//姿勢が目標から遠ければ解析を実施する
 		auto jointAngles = armSolver->GetAngles();
 		if (true) {
@@ -1125,8 +1139,16 @@ void kenkyu::SolveAngles() {
 
 			//スパンを取る 単位はセンチ秒
 			auto nowTimepoint = uuu::app::GetTimeFromInit();
-			size_t span = (nowTimepoint - beforeTimepoint)/10;
+			double span = (nowTimepoint - beforeTimepoint) / 10;
 			beforeTimepoint = nowTimepoint;
+
+			//スパンをシェアする
+			{
+				std::lock_guard<std::mutex> lock(solverSpanRateShareMutex);
+				solverSpanRateShare = span;
+			}
+
+
 			//角度を送信する
 			for (size_t m = 1; m <= 6; m++) {
 				if (kenkyu::serialWriteThreads.at(m - 1)->joinable())kenkyu::serialWriteThreads.at(m - 1)->join();//スレッドを開放
@@ -1252,7 +1274,12 @@ kenkyu::Vector6 kenkyu::GetMoterAngles() {
 	return Vector6::Zero();
 }
 
-
+inline string kenkyulocal::to_stringf(double _Val, const char* format) {
+	const auto _Len = static_cast<size_t>(_CSTD _scprintf(format, _Val));
+	string _Str(_Len, '\0');
+	_CSTD sprintf_s(&_Str[0], _Len + 1, format, _Val);
+	return _Str;
+}
 
 
 

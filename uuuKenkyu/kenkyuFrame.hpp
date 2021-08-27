@@ -46,6 +46,8 @@
 
 namespace kenkyulocal {
 
+	//to_string フォーマット指定できる版
+	std::string to_stringf(double _Val, const char* format = "%.3f");
 
 	//卒研のフレームシングルトン
 	class kenkyu {
@@ -141,6 +143,9 @@ namespace kenkyulocal {
 		static std::unique_ptr<boost::thread> logThread;
 
 		static std::pair<unsigned int, unsigned int> windowBounds;//ウィンドウのサイズ(VR使用と未使用の差を吸収)
+
+		static std::mutex solverSpanRateShareMutex;
+		static double solverSpanRateShare;//ソルバーループのスパンをメインとソルバースレットで共有する
 
 		//ソルバーの動作状況
 		class _solverState {
