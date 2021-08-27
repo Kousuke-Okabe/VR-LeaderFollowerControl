@@ -395,7 +395,7 @@ namespace armJointSolver {
 			if (this->CheckConvergence(ref))return;
 
 			//スパンからすすめる時間を決定する1/16で1.0sになるように作る
-			T timeStep = span / (1.0 / 16.0);
+			T timeStep = min(1.0, span / (1.0 / 16.0));
 
 			//新しい角度を計算
 			this->CalcAngleForJoints(timeStep, ref, VectorC::Zero(), this->defaultArguments.morments, this->defaultArguments.distance);
