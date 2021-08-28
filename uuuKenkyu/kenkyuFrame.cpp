@@ -282,12 +282,12 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftPointer-mesh", glm::identity<glm::mat4>(), false));
 	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
 	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "cat-mesh", kenkyu::reference.toMat()));
-	//kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets(rooms.dae), "", glm::identity<glm::mat4>()));
+	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets("rooms.dae"), "", glm::identity<glm::mat4>()));
 
-	//kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets(plane.dae), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -1))));
+	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets("plane.dae"), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -3))));
 	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets("screen.dae"), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
 		DrawGui();
-		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1, -2)));
+		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1.5, -2)));
 	kenkyu::gmeshs["inMonitor"].reset(kenkyu::specialMeshs.inMonitor);
 
 	/*
@@ -420,7 +420,6 @@ void kenkyu::Event() {
 
 	//GUI関係のイベント
 	kenkyu::GuiEvents();
-	
 	
 	//終わっているスレッドがあれば殺す
 	/*if (kenkyu::serialWriteThread)
@@ -637,16 +636,34 @@ void kenkyu::GuiEvents() {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	//windowスタイル
+
+	//arm healthは緑系
 	ImGui::SetNextWindowPos(ImVec2(windowBounds.first * 0.6, 0));
 	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second*0.3));
-
-	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.7f, 0.2f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
 	ImGui::Begin("Arm health");
 	{
+
+
+		static int debc = 0;
+		if (++debc % 5 == 0)
+			kenkyu::solverState.SetUpdate(3);
+
+		//更新されたなら四角をピコピコする
+		kenkyu::solverState.DecrementCount();
+		auto rectBegin = [&] {auto gen = ImGui::GetCursorScreenPos(); return ImVec2(gen.x+(kenkyu::windowBounds.first / 4.0), gen.y); }();
+		auto updateShowerSize = std::max<double>(kenkyu::windowBounds.first / 20.0, kenkyu::windowBounds.second / 20.0);
+		if (kenkyu::solverState.GetUpdate() != 0) {
+			ImGui::GetWindowDrawList()->AddRectFilled(rectBegin, AddImVec2s(rectBegin, ImVec2(updateShowerSize, updateShowerSize)), ImGui::GetColorU32(ImVec4(0.3, 1, 0.3, 1)), updateShowerSize / 10.0);
+		}
+		else {
+			ImGui::GetWindowDrawList()->AddRectFilled(rectBegin, AddImVec2s(rectBegin, ImVec2(updateShowerSize, updateShowerSize)), ImGui::GetColorU32(ImVec4(0.3, 0.3, 0.3, 1)), updateShowerSize / 10.0);
+		}
+
 		ImGui::Text("reference pos");
 		ImGui::Text((" " + to_stringf(kenkyu::reference.pos.x) + "," + to_stringf(kenkyu::reference.pos.y) + "," + to_stringf(kenkyu::reference.pos.z)).c_str());
+
 		ImGui::Text("reference quat");
 		ImGui::Text((" " + to_stringf(kenkyu::reference.quat.x) + "," + to_stringf(kenkyu::reference.quat.y) + "," + to_stringf(kenkyu::reference.quat.z) + "," + to_stringf(kenkyu::reference.quat.w)).c_str());
 		ImGui::Text("moter positions");
@@ -660,28 +677,15 @@ void kenkyu::GuiEvents() {
 		ImGui::Text("solver state");
 		ImGui::Text((std::string(" ") + kenkyu::solverState.operator std::string()).c_str());
 
-		//更新されたなら
-		kenkyu::solverState.DecrementCount();
-		//cout << kenkyu::solverState.Get() << endl;
-		if (kenkyu::solverState.Get() != 0) {
-			auto rectBegin = ImGui::GetCursorScreenPos();
-			auto updateShowerSize = std::max<double>(kenkyu::windowBounds.first / 20.0, kenkyu::windowBounds.second / 20.0);
-			ImGui::GetWindowDrawList()->AddRectFilled(rectBegin, AddImVec2s(rectBegin, ImVec2(updateShowerSize, updateShowerSize)), ImGui::GetColorU32(ImVec4(0.3, 1, 0.3, 1)),updateShowerSize/10.0);
-		}
-		else {
-			auto rectBegin = ImGui::GetCursorScreenPos();
-			auto updateShowerSize = std::max<double>(kenkyu::windowBounds.first / 20.0, kenkyu::windowBounds.second / 20.0);
-			ImGui::GetWindowDrawList()->AddRectFilled(rectBegin, AddImVec2s(rectBegin, ImVec2(updateShowerSize, updateShowerSize)), ImGui::GetColorU32(ImVec4(0.3, 0.3, 0.3, 1)),updateShowerSize/10.0);
-		}
 	}
 	ImGui::End();
 	ImGui::PopStyleColor(2);
 
+	//system healthは青系
 	ImGui::SetNextWindowPos(ImVec2(windowBounds.first * 0.6, windowBounds.second * 0.3));
 	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second * 0.2));
-
-	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.0f, 0.7f, 0.2f, 1.0f));
-	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.0f, 0.3f, 0.1f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.1f, 0.1f, 0.3f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.1f, 0.1f, 0.3f, 1.0f));
 	ImGui::Begin("System health");
 	{
 		auto mainSpan=kenkyu::GetSpan();
@@ -704,7 +708,7 @@ void kenkyu::GuiEvents() {
 	ImGui::SetNextWindowPos(ImVec2(windowBounds.first * 0.6, windowBounds.second * 0.5));
 	ImGui::SetNextWindowSize(ImVec2(windowBounds.first * 0.4, windowBounds.second*0.5));
 
-	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.7f, 0.0f, 0.2f, 1.0f));
+	ImGui::PushStyleColor(ImGuiCol_TitleBgActive, ImVec4(0.3f, 0.0, 0.1f, 1.0f));
 	ImGui::PushStyleColor(ImGuiCol_TitleBg, ImVec4(0.3f, 0.0, 0.1f, 1.0f));
 	ImGui::Begin("Controls");
 	{
@@ -1207,7 +1211,7 @@ kenkyu::_solverState::_solverState() {
 }
 kenkyu::_solverState::operator std::string(){
 
-	switch (this->Get()) {
+	switch (this->GetRawFormat()) {
 	case kenkyu::_solverState::notYet:
 		return "not yet";
 	case kenkyu::_solverState::solved:
@@ -1221,12 +1225,12 @@ kenkyu::_solverState::operator std::string(){
 	}
 }
 
-void kenkyu::_solverState::Set(const rawFormat& w) {
+void kenkyu::_solverState::SetRawFormat(const rawFormat& w) {
 	std::lock_guard<std::mutex> lock(this->rawMutex);
 
 	this->raw = w;
 }
-kenkyu::_solverState::rawFormat kenkyu::_solverState::Get(){
+kenkyu::_solverState::rawFormat kenkyu::_solverState::GetRawFormat(){
 	std::lock_guard<std::mutex> lock(this->rawMutex);
 
 	return this->raw;

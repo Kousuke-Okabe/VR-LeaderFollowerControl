@@ -158,8 +158,8 @@ namespace kenkyulocal {
 			};
 			_solverState();
 			operator std::string();
-			void Set(const rawFormat& w);//スレッドセーブ
-			rawFormat Get();//スレッドセーブ
+			void SetRawFormat(const rawFormat& w);//スレッドセーブ
+			rawFormat GetRawFormat();//スレッドセーブ
 
 			//更新を通知するやつ
 			void SetUpdate(unsigned int up);//アップデートに値を設定
