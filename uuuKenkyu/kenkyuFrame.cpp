@@ -19,7 +19,7 @@ kenkyu::_systemBootFlags kenkyu::systemBootFlags;
 
 kenkyu::_actionWarehouse kenkyu::actionWarehouse;
 
-std::unique_ptr<umeArmTransfer> kenkyu::armTransferMgr;
+std::unique_ptr<umeArmTransfer> kenkyu::armTransfer;
 
 glm::vec3 kenkyu::hmdPos;
 //std::list<boost::thread> kenkyu::serialWriteThreads;
@@ -183,7 +183,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	if (properties.enableSerialSystem) {
 		try {
 
-			kenkyu::armTransferMgr.reset(new umeArmTransfer(properties.serialPort));
+			kenkyu::armTransfer.reset(new umeArmTransfer(properties.serialPort));
 			kenkyu::log("Serial port was connected");
 			kenkyu::systemBootFlags.serial = true;
 		}
@@ -244,7 +244,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	FreeImage_Initialise();
 
 	//トルクを入れる
-	if (kenkyu::systemBootFlags.serial)kenkyu::armTransferMgr->Torque(255, 1);
+	if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->Torque(255, 1);
 
 	//ソルバーを起動
 	if (kenkyu::systemBootFlags.serial)solverThread.reset(new boost::thread(kenkyu::SolveAngles));
@@ -645,13 +645,7 @@ void kenkyu::GuiEvents() {
 	ImGui::Begin("Arm health");
 	{
 
-
-		static int debc = 0;
-		if (++debc % 5 == 0)
-			kenkyu::solverState.SetUpdate(3);
-
 		//更新されたなら四角をピコピコする
-		kenkyu::solverState.DecrementCount();
 		auto rectBegin = [&] {auto gen = ImGui::GetCursorScreenPos(); return ImVec2(gen.x+(kenkyu::windowBounds.first / 4.0), gen.y); }();
 		auto updateShowerSize = std::max<double>(kenkyu::windowBounds.first / 20.0, kenkyu::windowBounds.second / 20.0);
 		if (kenkyu::solverState.GetUpdate() != 0) {
@@ -660,6 +654,7 @@ void kenkyu::GuiEvents() {
 		else {
 			ImGui::GetWindowDrawList()->AddRectFilled(rectBegin, AddImVec2s(rectBegin, ImVec2(updateShowerSize, updateShowerSize)), ImGui::GetColorU32(ImVec4(0.3, 0.3, 0.3, 1)), updateShowerSize / 10.0);
 		}
+		kenkyu::solverState.DecrementCount();
 
 		ImGui::Text("reference pos");
 		ImGui::Text((" " + to_stringf(kenkyu::reference.pos.x) + "," + to_stringf(kenkyu::reference.pos.y) + "," + to_stringf(kenkyu::reference.pos.z)).c_str());
@@ -717,14 +712,14 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.6f, 0.1f, 0.1f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 
 			if (ImGui::Button("Emergency", ImVec2(windowBounds.first * 0.4 * 1.0, windowBounds.second * 0.5 * 0.25))&&kenkyu::systemBootFlags.serial)
-				kenkyu::armTransferMgr->Torque(255, 0);//緊急停止ボタン
+				kenkyu::armTransfer->Torque(255, 0);//緊急停止ボタン
 			ImGui::PopStyleColor(2);
 
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 7.0f, 0.2f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.3f, 0.1f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			auto retorquePos = ImGui::GetCursorPos();
 			if (ImGui::Button("Retorque", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25)) && kenkyu::systemBootFlags.serial)
-				kenkyu::armTransferMgr->Torque(255, 1);//再トルク印加ボタン
+				kenkyu::armTransfer->Torque(255, 1);//再トルク印加ボタン
 			ImGui::PopStyleColor(2);
 			
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.7f, 1.0f));
@@ -736,7 +731,7 @@ void kenkyu::GuiEvents() {
 				kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
 				kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
 
-				kenkyu::armTransferMgr->Move(255, 0, 500);
+				kenkyu::armTransfer->Move(255, 0, 500);
 			}
 			ImGui::PopStyleColor(2);
 
@@ -1125,7 +1120,6 @@ void kenkyu::SolveAngles() {
 
 	VectorC ref;
 	while (kenkyu::N_killSover) {
-
 		//リファレンスを読み込み
 		{
 			std::lock_guard<std::mutex> lock(mutexRefPoint);
@@ -1134,7 +1128,7 @@ void kenkyu::SolveAngles() {
 
 		auto beforeAngles = armSolver->GetAngles();
 		armSolver->SolverStep(ref, 1.0 / 16.0);//解析
-		//姿勢が目標から遠ければ解析を実施する
+
 		auto jointAngles = armSolver->GetAngles();
 		if (true) {
 			//フォーマットをそろえる
@@ -1152,25 +1146,32 @@ void kenkyu::SolveAngles() {
 				solverSpanRateShare = span;
 			}
 
+			//スレッドのスパン管理をする
+			std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - span * 10.0))));
 
+			//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			
 			//角度を送信する
+
 			for (size_t m = 1; m <= 6; m++) {
-				if (kenkyu::serialWriteThreads.at(m - 1)->joinable())kenkyu::serialWriteThreads.at(m - 1)->join();//スレッドを開放
-				kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransferMgr.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
+				//スレッドが存在すればjoin
+				//if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
+				//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
+				
+				kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
+				//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
 			}
 
+
 			//更新にカウントをセットする
-			kenkyu::solverState.SetUpdate(3);
+			kenkyu::solverState.SetUpdate(2);
 
 			//ログファイルに書き込む
-			auto now = std::chrono::system_clock::now();
-			auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
-			kenkyu::log<double, 6>(to_string(count), correctedAngles, kenkyu::logSaved, " ");
+			//auto now = std::chrono::system_clock::now();
+			//auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
+			//kenkyu::log<double, 6>(to_string(count), correctedAngles, kenkyu::logSaved, " ");
 
 		}
-		//近ければしばらく待つ
-		else std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
 
 	}
 }

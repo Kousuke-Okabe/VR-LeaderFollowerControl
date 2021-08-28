@@ -168,6 +168,9 @@ namespace armJointSolver {
 			return sign * min(abs(a), b);
 		}
 
+	//各要素をスレッドセーブにするやつ
+		std::mutex anglurVeloMutex, angleMutex;
+
 	public:
 
 		//引数バインドたち
@@ -197,10 +200,12 @@ namespace armJointSolver {
 
 		}
 		//各要素のアクセサ
-		VectorR GetAngleVelocities()const {
+		VectorR GetAngleVelocities(){
+			std::lock_guard<std::mutex> lock(this->anglurVeloMutex);
 			return this->angleVelocities;
 		}
-		VectorR GetAngles()const {
+		VectorR GetAngles(){
+			std::lock_guard<std::mutex> lock(this->angleMutex);
 			return this->angles;
 		}
 
@@ -400,7 +405,7 @@ namespace armJointSolver {
 			//新しい角度を計算
 			this->CalcAngleForJoints(timeStep, ref, VectorC::Zero(), this->defaultArguments.morments, this->defaultArguments.distance);
 
-			std::cout << this->observer(this->GetAngleVelocities()) << std::endl;
+			//std::cout << this->observer(this->GetAngleVelocities()) << std::endl;
 			//std::cout << this->nowSpringCoeff << std::endl;
 
 			//発振を検知すると角速度をリセットする

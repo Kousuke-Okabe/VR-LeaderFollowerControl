@@ -116,7 +116,7 @@ namespace kenkyulocal {
 
 		static std::chrono::system_clock::time_point origin;//開始時間
 
-		static std::unique_ptr<umeArmTransfer> armTransferMgr;//アームへの転送を行う
+		static std::unique_ptr<umeArmTransfer> armTransfer;//アームへの転送を行う
 
 		static glm::vec3 hmdPos;//ヘッドセットの位置
 
