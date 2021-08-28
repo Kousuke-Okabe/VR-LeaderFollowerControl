@@ -22,8 +22,8 @@ void kenkyulocal::kenkyuArmMeshSet::Draw(const std::string& attribName) {
 void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const glm::vec3& angles) {
 	//それぞれのボーン情報　base-b0-link0-b1-link1-b2-link2
 	const glm::mat4 b0 = this->transform;
-	const glm::mat4 b1 = glm::translate(glm::vec3(0, -0.2, 0));
-	const glm::mat4 b2 = glm::translate(glm::vec3(0, -0.6, 0));
+	const glm::mat4 b1 = glm::translate(glm::vec3(0, -0.28, 0));
+	const glm::mat4 b2 = glm::translate(glm::vec3(0, -0.35, 0));
 
 	//ローカル変形
 	const glm::mat4 l0 = glm::rotate(angles[0], glm::vec3(0, 1, 0));
@@ -38,4 +38,23 @@ void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const glm::vec3& angle
 	this->meshes["arm0"].get()->SetTransform(g0);
 	this->meshes["arm1"].get()->SetTransform(g1);
 	this->meshes["arm2"].get()->SetTransform(g2);
+}
+
+kenkyulocal::offsetMesh::offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>shader, const std::string& path, const std::string mesh,glm::mat4 offset):uuu::game::mesh(shader,path,mesh) {
+	this->offset = offset;
+
+	this->SetTransform(glm::identity<glm::mat4>());
+}
+kenkyulocal::offsetMesh::offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>shader, const std::string& path, const std::string mesh, glm::mat4 def,glm::mat4 offset, bool skipDrawDef) : uuu::game::mesh(shader,path,mesh,def,skipDrawDef) {
+	this->offset = offset;
+
+	this->SetTransform(def);
+}
+void kenkyulocal::offsetMesh::SetTransform(const glm::mat4& tr) {
+
+	return super::SetTransform(offset*tr);
+}
+glm::mat4& kenkyulocal::offsetMesh::GetTransform() {
+	glm::mat4 ret = super::GetTransform();
+	return ret;
 }

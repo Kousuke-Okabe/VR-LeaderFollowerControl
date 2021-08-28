@@ -43,7 +43,7 @@ void uuu::game::mesh::Draw(const std::string& attribName) {
 
 	if (skipDraw)return;
 
-	this->inner.Shader().lock()->SetUniformValue(attribName, this->transform);
+	this->inner.Shader().lock()->SetUniformValue(attribName, this->GetTransform());
 	this->inner.DrawElements();
 
 	return;

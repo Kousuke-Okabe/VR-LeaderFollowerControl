@@ -22,8 +22,8 @@ namespace uuu {
 			virtual ~drawable();
 			virtual void Draw(const std::string& attribName = "modelTransform") = 0;
 		
-			void SetTransform(const glm::mat4& tr);
-			glm::mat4& GetTransform();
+			virtual void SetTransform(const glm::mat4& tr);
+			virtual glm::mat4& GetTransform();
 		};
 
 		class mesh :public drawable {
