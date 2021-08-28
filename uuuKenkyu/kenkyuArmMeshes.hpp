@@ -10,7 +10,7 @@ namespace kenkyulocal {
 		//メッシュセットなのでいっぱいメッシュを持っている
 		std::unordered_map<std::string, std::shared_ptr<uuu::game::mesh>> meshes;
 
-		void SetTransformForAngles(const glm::vec3& angles);//角度から変換行列を設定する
+		//void SetTransformForAngles(const glm::vec3& angles);//角度から変換行列を設定する
 		void SetTransformForAngles(const Eigen::Matrix<double, 6, 1>& angles);
 	public:
 		kenkyuArmMeshSet(std::unordered_map<std::string, std::shared_ptr<uuu::shaderProgramObjectVertexFragment>>* shaders,const glm::mat4& baseTransform = glm::identity<glm::mat4>());
@@ -22,21 +22,9 @@ namespace kenkyulocal {
 	protected:
 		glm::mat4 offset;
 	public:
-		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 offset = glm::identity<glm::mat4>());
-		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 def, glm::mat4 offset, bool skipDrawDef = false);
+		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, glm::mat4 offset = glm::identity<glm::mat4>());
+		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment> shader, const std::string& path, const std::string mesh, glm::mat4 def, glm::mat4 offset, bool skipDrawDef = false);
 	
 		virtual void SetTransform(const glm::mat4& tr);
-		virtual glm::mat4& GetTransform();
-	};
-	class offsetMesh :public uuu::game::mesh {
-		using super = uuu::game::mesh;
-	protected:
-		glm::mat4 offset;
-	public:
-		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 offset = glm::identity<glm::mat4>());
-		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 def, glm::mat4 offset, bool skipDrawDef = false);
-	
-		virtual void SetTransform(const glm::mat4& tr);
-		virtual glm::mat4& GetTransform();
 	};
 };
