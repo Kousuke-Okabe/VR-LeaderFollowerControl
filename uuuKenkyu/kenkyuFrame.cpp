@@ -281,7 +281,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftHand"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftHand-mesh", glm::identity<glm::mat4>(), true));
 	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftPointer-mesh", glm::identity<glm::mat4>(), false));
 	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
-	kenkyu::gmeshs["cat"].reset(new kenkyulocal::offsetMesh(shaders["norm"], assets("kenkyuSet.dae"), "cat-mesh", glm::translate(glm::vec3(0,-0.63,0)),glm::translate(glm::vec3(0, 1.5, -1.5))));
+	kenkyu::gmeshs["cat"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "cat-mesh", kenkyu::reference.toMat()));
 	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets("rooms.dae"), "", glm::identity<glm::mat4>()));
 
 	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets("plane.dae"), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -3))));

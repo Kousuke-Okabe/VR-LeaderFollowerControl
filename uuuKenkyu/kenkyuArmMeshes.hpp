@@ -17,6 +17,26 @@ namespace kenkyulocal {
 		void Draw(const std::string& attribName = "modelTransform");
 		void Draw(const Eigen::Matrix<double, 6, 1>& angles,const std::string& attribName = "modelTransform");
 	};
-
+	class offsetMesh :public uuu::game::mesh {
+		using super = uuu::game::mesh;
+	protected:
+		glm::mat4 offset;
+	public:
+		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 offset = glm::identity<glm::mat4>());
+		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 def, glm::mat4 offset, bool skipDrawDef = false);
 	
+		virtual void SetTransform(const glm::mat4& tr);
+		virtual glm::mat4& GetTransform();
+	};
+	class offsetMesh :public uuu::game::mesh {
+		using super = uuu::game::mesh;
+	protected:
+		glm::mat4 offset;
+	public:
+		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 offset = glm::identity<glm::mat4>());
+		offsetMesh(std::shared_ptr<uuu::shaderProgramObjectVertexFragment>, const std::string& path, const std::string mesh, glm::mat4 def, glm::mat4 offset, bool skipDrawDef = false);
+	
+		virtual void SetTransform(const glm::mat4& tr);
+		virtual glm::mat4& GetTransform();
+	};
 };
