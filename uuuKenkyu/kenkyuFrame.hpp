@@ -94,6 +94,7 @@ namespace kenkyulocal {
 
 			bool enableVrSystem;//VRシステムを有効化する
 			bool enableSerialSystem;//シリアル通信を有効化する
+			bool enableDebugMode;//デバッグモードを有効化する
 		};
 		static _properties properties;
 		//サブシステムの起動状態を保存
@@ -212,6 +213,8 @@ namespace kenkyulocal {
 
 		//GUIイベントの処理
 		static void GuiEvents();
+		//デバックのイベント
+		static void DebugEvent();
 
 		//kenkyuのプロパティーをプロパティシートから読み出す
 		static void GetProperty(const std::string& path);

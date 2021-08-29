@@ -5,7 +5,7 @@ using namespace uuu::easy::usings;
 using namespace kenkyulocal;
 using namespace Eigen;
 
-const int kenkyu::version = 100;
+const int kenkyu::version = 101;
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -423,19 +423,38 @@ void kenkyu::Event() {
 	//GUI関係のイベント
 	kenkyu::GuiEvents();
 	
-	//終わっているスレッドがあれば殺す
-	/*if (kenkyu::serialWriteThread)
-		if (kenkyu::serialWriteThread->try_join_for(boost::chrono::milliseconds(20))) {
-			kenkyu::serialWriteThread.release();
-		}*/
-
-	/*if (kenkyu::serialWriteThreads.size() > 0)
-		for (auto b = kenkyu::serialWriteThreads.begin(); b != kenkyu::serialWriteThreads.end();b++) {
-			if (b->try_join_for(boost::chrono::milliseconds(10)))
-				kenkyu::serialWriteThreads.erase(b);
-			log("残り" + to_string(kenkyu::serialWriteThreads.size()));
-		}*/
+	//デバッグモードが有効ならデバッグイベントを行う
+	if (properties.enableDebugMode)
+		kenkyu::DebugEvent();
 	
+}
+
+void kenkyu::DebugEvent() {
+
+	if (!properties.enableVrSystem) {
+		glm::vec3 dist(0, 0, 0);
+		//キーボードでリファレンスが動かせる
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_A))
+			dist += glm::vec3(-1, 0, 0);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_D))
+			dist += glm::vec3(1, 0, 0);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_W))
+			dist += glm::vec3(0, 0, -1);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_S))
+			dist += glm::vec3(0, 0, 1);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_Q))
+			dist += glm::vec3(0, 1, 0);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_E))
+			dist += glm::vec3(0, -1, 0);
+
+		reference.pos += [&] {
+			if (dist == glm::zero<glm::vec3>())return dist;
+
+			auto no=glm::normalize(dist);
+			return glm::vec3(no.x * 0.01, no.y * 0.01, no.z * 0.01);
+		}();
+		kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
+	}
 }
 
 void kenkyu::CallbackVrEvents(vr::VREvent_t event) {
@@ -901,6 +920,15 @@ void kenkyu::GetProperty(const std::string& path) {
 	else {
 		properties.enableSerialSystem = true;
 		log("not found \"enable Serial\" property. default value = true", logDebug);
+	}
+
+	if (boost::optional<bool> enableDebugModedt = pt.get_optional<bool>("kenkyu.setup.system.<xmlattr>.debugMode")) {
+		properties.enableDebugMode = enableDebugModedt.get();
+		kenkyu::log("property \"debugMode\" = " + std::to_string(properties.enableDebugMode), logDebug);
+	}
+	else {
+		properties.enableDebugMode = false;
+		log("not found \"debugMode\" property. default value = false", logDebug);
 	}
 
 	return;
