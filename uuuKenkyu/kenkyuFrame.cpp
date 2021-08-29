@@ -210,7 +210,7 @@ void kenkyu::BootUuuSetForKekyu() {
 			else throw ex;
 		}
 	}
-	kenkyu::log("Surpress VR system by \"enable VR = false\"");
+	else kenkyu::log("Surpress VR system by \"enable VR = false\"");
 
 
 	//UUUのウィンドウをVRの画面サイズの半分に合わせて作る
