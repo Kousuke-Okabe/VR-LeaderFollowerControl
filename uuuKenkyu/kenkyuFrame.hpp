@@ -52,6 +52,7 @@ namespace kenkyulocal {
 	//卒研のフレームシングルトン
 	class kenkyu {
 	public:
+		const static int version;//今のバージョン
 
 		using Vector7 = Eigen::Matrix<double, 7, 1>;
 		using Vector6 = Eigen::Matrix<double, 6, 1>;
@@ -68,6 +69,7 @@ namespace kenkyulocal {
 
 		//いろいろなプロパティ
 		struct _properties {
+
 			double cameraNear;//最短表示距離
 			double cameraFar;//最長表示距離
 			double fov;//視野

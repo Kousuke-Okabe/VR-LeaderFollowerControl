@@ -5,6 +5,8 @@ using namespace uuu::easy::usings;
 using namespace kenkyulocal;
 using namespace Eigen;
 
+const int kenkyu::version = 100;
+
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
 typename std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> kenkyu::gmeshs;
@@ -754,6 +756,15 @@ void kenkyu::GetProperty(const std::string& path) {
 
 	ptree pt;
 	read_xml(path, pt);
+
+	//バージョンチェック
+	if (boost::optional<int> verdt = pt.get_optional<int>("kenkyu.setup.<xmlattr>.version")) {
+
+		if (kenkyu::version != verdt.get())throw std::runtime_error("the version(" + std::to_string(kenkyu::version) + ") doesn't match setup version(" + std::to_string(verdt.get()) + ")");
+
+		kenkyu::log("property \"version\" = " + std::to_string(verdt.get()), logDebug);
+	}
+	else throw std::runtime_error("not found \"version\" property");
 
 	//
 	if (boost::optional<double> neardt = pt.get_optional<double>("kenkyu.setup.persp.<xmlattr>.near")) {
