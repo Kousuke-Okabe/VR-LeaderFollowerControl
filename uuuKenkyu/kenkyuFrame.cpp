@@ -947,6 +947,15 @@ template<typename T>T signNot0(const T& a) {
 	return (a > 0.0) ? 1.0 : -1.0;
 }
 
+kenkyu::Vector4 kenkyu::GetFaceVector(const Eigen::Matrix3d& rot) {
+
+	Eigen::Quaterniond quat(rot);
+	auto angle = acos(quat.w());
+
+	return Vector4(sin(angle) * quat.x(), sin(angle) * quat.y(), sin(angle) * quat.z(), angle);
+	return Vector4::Zero();
+}
+
 kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
 
 	//é¿å±ëïíuÇ…çáÇÌÇπÇΩÉAÅ[ÉÄ()
@@ -955,14 +964,9 @@ kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
 
 	//Ç±Ç±Ç©ÇÁépê®Ç∆ç¿ïWÇî≤Ç´èoÇ∑ épê®ÇÃï\åªÇïœÇ¶ÇƒÇ›ÇÈ
 	Eigen::Vector3d pos(trans.translation());
-	//épê®Çå∏éZÇ™íËã`Ç≈Ç´ÇÈÇÊÇ§Ç…Ç†ÇÁÇÌÇ∑Å@âÒì]é≤Çz+ÇÃãÖñ Ç∆z=0ïΩñ Ç≈y>0Ç≈ê≥ãKâªÇ∑ÇÈ
-	Eigen::Quaterniond quat(trans.rotation());
-	/*if (quat.z() < 0.0)quat = Quaterniond(-quat.w(), -quat.x(), -quat.y(), -quat.x());
-	else if (quat.z() == 0.0 && quat.y() < 0.0)quat = Quaterniond(-quat.w(), -quat.x(), -quat.y(), -quat.x());
-	else if (quat.z() == 0.0 && quat.y() == 0.0 && quat.x() < 0.0)quat = Quaterniond(-quat.w(), -quat.x(), -quat.y(), -quat.x());
-	else if (quat.z() == 0.0 && quat.y() == 0.0 && quat.x() == 0.0)quat = Quaterniond(1, 0, 0, 0);*/
+	Vector4 face = GetFaceVector(trans.rotation());
 
-	return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
+	return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), face(0), face(1), face(2), face(3));
 }
 
 

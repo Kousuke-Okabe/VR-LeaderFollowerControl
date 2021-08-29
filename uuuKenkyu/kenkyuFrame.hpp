@@ -54,6 +54,7 @@ namespace kenkyulocal {
 	public:
 		const static int version;//今のバージョン
 
+		using Vector4 = Eigen::Matrix<double, 4, 1>;
 		using Vector7 = Eigen::Matrix<double, 7, 1>;
 		using Vector6 = Eigen::Matrix<double, 6, 1>;
 
@@ -332,6 +333,8 @@ namespace kenkyulocal {
 
 		//アームの順運動学
 		static Vector7 fjikken(const Vector6& q);
+		//回転から有顔ベクトルを作る
+		static Vector4 GetFaceVector(const Eigen::Matrix3d& rot);
 
 	public:
 
