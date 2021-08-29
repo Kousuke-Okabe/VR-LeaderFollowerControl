@@ -75,7 +75,7 @@ namespace armJointSolver {
 
 	protected:
 
-		MatrixJ CalcJacobi(const std::function<VectorC(const VectorR&)>& f, const VectorR& q, const T d)const {
+		virtual MatrixJ CalcJacobi(const std::function<VectorC(const VectorR&)>& f, const VectorR& q, const T d)const {
 			MatrixJ ret;
 			//サイズが入れ替わる
 			for (size_t i = 0; i < dimC; i++)//何行
@@ -167,6 +167,38 @@ namespace armJointSolver {
 		using MatrixJ = Eigen::Matrix<T, dimC, dimR>;//ヤコビ行列
 
 	protected:
+
+		//位置姿勢ベクトルの引き算a-base base+retでAもしくはAと同じ回転になるようにする
+		VectorC SubtractPosquat(const VectorC& a,const VectorC& base) const{
+			Eigen::Vector3d pos(a(0) - base(0), a(1) - base(1), a(2) - base(2));
+
+			//-AはAと同じ回転なので２つのケースを試す
+			Eigen::Vector4d quatA(a(3) - base(3), a(4) - base(4), a(5) - base(5), a(6) - base(6));
+			Eigen::Vector4d quatB(-a(3) - base(3), -a(4) - base(4), -a(5) - base(5), -a(6) - base(6));
+
+			if (quatA.squaredNorm() < quatB.squaredNorm())
+				return VectorC(pos(0), pos(1), pos(2), quatA(0), quatA(1), quatA(2), quatA(3));
+			else
+				return VectorC(pos(0), pos(1), pos(2), quatB(0), quatB(1), quatB(2), quatB(3));
+		}
+
+		MatrixJ CalcJacobi(const std::function<VectorC(const VectorR&)>& f, const VectorR& q, const T d)const {
+			MatrixJ ret;
+			//サイズが入れ替わる
+			for (size_t i = 0; i < dimC; i++)//何行
+				for (size_t j = 0; j < dimR; j++) {//何列
+					//差分を作成する
+					VectorR dvec;
+					for (size_t k = 0; k < dimR; k++)
+						if (k == j)dvec(k) = d;
+						else dvec(k) = 0.0;
+					//行でq 列でx,yを決める
+					ret(i, j) = SubtractPosquat(f(q + dvec), f(q))(i) / d;
+				}
+
+			return ret;
+		}
+
 		VectorC kRatio;//ばね定数比
 
 		VectorR CalcAngleVelocitiesForJoints(double t, const VectorC& ref, const VectorC& k, const VectorR& morments, const T& d) {
