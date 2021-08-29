@@ -248,8 +248,8 @@ void kenkyu::BootUuuSetForKekyu() {
 	//トルクを入れる
 	if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->Torque(255, 1);
 
-	//ソルバーを起動
-	if (kenkyu::systemBootFlags.serial)solverThread.reset(new boost::thread(kenkyu::SolveAngles));
+	//ソルバーを起動 シリアルかデバッグモード
+	if (kenkyu::systemBootFlags.serial||kenkyu::properties.enableDebugMode)solverThread.reset(new boost::thread(kenkyu::SolveAngles));
 
 	return;
 }
@@ -438,13 +438,13 @@ void kenkyu::DebugEvent() {
 			dist += glm::vec3(-1, 0, 0);
 		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_D))
 			dist += glm::vec3(1, 0, 0);
-		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_W))
-			dist += glm::vec3(0, 0, -1);
-		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_S))
-			dist += glm::vec3(0, 0, 1);
 		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_Q))
-			dist += glm::vec3(0, 1, 0);
+			dist += glm::vec3(0, 0, -1);
 		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_E))
+			dist += glm::vec3(0, 0, 1);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_W))
+			dist += glm::vec3(0, 1, 0);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_S))
 			dist += glm::vec3(0, -1, 0);
 
 		reference.pos += [&] {
@@ -683,7 +683,7 @@ void kenkyu::GuiEvents() {
 		ImGui::Text("reference quat");
 		ImGui::Text((" " + to_stringf(kenkyu::reference.quat.x) + "," + to_stringf(kenkyu::reference.quat.y) + "," + to_stringf(kenkyu::reference.quat.z) + "," + to_stringf(kenkyu::reference.quat.w)).c_str());
 		ImGui::Text("moter positions");
-		if (kenkyu::systemBootFlags.serial) {
+		if (kenkyu::systemBootFlags.serial||properties.enableDebugMode) {
 			auto sendAngle = ToDegreeFrom10TimesDegree<int, 6>(ToHutabaDegreeFromRadiansVec(CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec<double, 6>(kenkyu::GetMoterAngles())))));
 			for (size_t m = 1; m <= 6; m++)
 				ImGui::Text((" m" + to_string(m) + ": " + to_string(sendAngle(m - 1)) + "deg").c_str());
@@ -714,7 +714,7 @@ void kenkyu::GuiEvents() {
 			solverSpan = solverSpanRateShare;
 		}
 		ImGui::Text("solver span rate");
-		if (systemBootFlags.serial) ImGui::Text((std::string(" ") + to_stringf(1.0 / (solverSpan / 100.0))).c_str());
+		if (systemBootFlags.serial||properties.enableDebugMode) ImGui::Text((std::string(" ") + to_stringf(1.0 / (solverSpan / 100.0))).c_str());
 		else ImGui::Text(" Not booted yet.");
 	}
 	ImGui::End();
@@ -1191,15 +1191,15 @@ void kenkyu::SolveAngles() {
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			
 			//角度を送信する
+			if(properties.enableSerialSystem)
+				for (size_t m = 1; m <= 6; m++) {
+					//スレッドが存在すればjoin
+					//if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
+					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
 
-			for (size_t m = 1; m <= 6; m++) {
-				//スレッドが存在すればjoin
-				//if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
-				//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
-				
-				kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
-				//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
-			}
+					kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
+					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
+				}
 
 
 			//更新にカウントをセットする
@@ -1312,7 +1312,7 @@ std::string kenkyu::assets(const std::string& details) {
 }
 
 kenkyu::Vector6 kenkyu::GetMoterAngles() {
-	if(systemBootFlags.serial)
+	if(systemBootFlags.serial||properties.enableDebugMode)
 		return kenkyu::armSolver->GetAngles();
 
 	return Vector6::Zero();
