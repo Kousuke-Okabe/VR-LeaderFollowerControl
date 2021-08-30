@@ -1011,14 +1011,11 @@ kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond
 	Eigen::Quaterniond quat(trans.rotation());
 	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
 
-	system("cls");
-	cout << (gq - pq).squaredNorm() << "\t" << (gq - mq).squaredNorm() << endl;
+
 	if ((gq - pq).squaredNorm() < (gq - mq).squaredNorm()) {
-		cout << "a" << endl;
 		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
 	}
 	else {
-		cout << "B" << endl;
 		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z(), -quat.w());
 	}
 }

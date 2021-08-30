@@ -326,7 +326,7 @@ namespace armJointSolver {
 			if (this->observer(this->GetAngleVelocities())) {
 				//this->angleVelocities = VectorR::Zero();
 				//this->observer.ResetContents();
-				std::cout << "\a" << std::endl;
+				//std::cout << "\a" << std::endl;
 			}
 
 
