@@ -190,16 +190,22 @@ namespace armJointSolver {
 
 		MatrixJ CalcJacobi(const std::function<VectorC(const VectorR&)>& f, const VectorR& q, const T d)const {
 			MatrixJ ret;
+			std::array<VectorC, dimR> distedVec;
+			//差分から返り値を微分したものを作る
+			for (size_t k = 0; k < dimR; k++) {
+				VectorR dvec = VectorR::Zero();
+				dvec(k) = d;
+
+				//行でq 列でx,yを決める
+				distedVec.at(k) = SubtractPosquat(f(q + dvec), f(q));
+			}
+
+
 			//サイズが入れ替わる
 			for (size_t i = 0; i < dimC; i++)//何行
 				for (size_t j = 0; j < dimR; j++) {//何列
-					//差分を作成する
-					VectorR dvec;
-					for (size_t k = 0; k < dimR; k++)
-						if (k == j)dvec(k) = d;
-						else dvec(k) = 0.0;
 					//行でq 列でx,yを決める
-					ret(i, j) = SubtractPosquat(f(q + dvec), f(q))(i) / d;
+					ret(i, j) = distedVec.at(j)(i) / d;
 				}
 
 			return ret;
