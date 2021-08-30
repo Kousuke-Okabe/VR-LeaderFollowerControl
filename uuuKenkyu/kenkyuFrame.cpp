@@ -453,6 +453,17 @@ void kenkyu::DebugEvent() {
 			auto no=glm::normalize(dist);
 			return glm::vec3(no.x * 0.01, no.y * 0.01, no.z * 0.01);
 		}();
+
+		//‚³‚ç‚É‰ñ“]‚às‚¤
+		glm::quat disq(1.0,0,0,0);
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_R))
+			disq = glm::quat(cos(0.01), 0, sin(0.01), 0) * disq;
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_F))
+			disq = glm::quat(cos(-0.01), 0, sin(-0.01), 0) * disq;
+
+		reference.quat = disq * reference.quat;
+
+
 		kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 	}
 }

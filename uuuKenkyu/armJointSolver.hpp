@@ -323,8 +323,8 @@ namespace armJointSolver {
 
 			//発振を検知すると角速度をリセットする
 			if (this->observer(this->GetAngleVelocities())) {
-				this->angleVelocities = VectorR::Zero();
-				this->observer.ResetContents();
+				//this->angleVelocities = VectorR::Zero();
+				//this->observer.ResetContents();
 				std::cout << "\a" << std::endl;
 			}
 
