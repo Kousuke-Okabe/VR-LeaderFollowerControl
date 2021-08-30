@@ -460,6 +460,14 @@ void kenkyu::DebugEvent() {
 			disq = glm::quat(cos(0.01), 0, sin(0.01), 0) * disq;
 		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_F))
 			disq = glm::quat(cos(-0.01), 0, sin(-0.01), 0) * disq;
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_T))
+			disq = glm::quat(cos(0.01), sin(0.01), 0, 0) * disq;
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_G))
+			disq = glm::quat(cos(-0.01), sin(-0.01), 0, 0) * disq;
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_Y))
+			disq = glm::quat(cos(0.01), 0, 0, sin(0.01)) * disq;
+		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_H))
+			disq = glm::quat(cos(-0.01), 0, 0, sin(-0.01)) * disq;
 
 		reference.quat = disq * reference.quat;
 
