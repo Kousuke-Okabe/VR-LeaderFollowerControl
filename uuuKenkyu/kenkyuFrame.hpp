@@ -335,6 +335,7 @@ namespace kenkyulocal {
 
 		//ƒA[ƒ€‚Ì‡‰^“®Šw
 		static Vector7 fjikken(const Vector6& q);
+		static Vector7 fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen);
 
 	public:
 

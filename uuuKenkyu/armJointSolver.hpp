@@ -316,6 +316,7 @@ namespace armJointSolver {
 			T timeStep = min(1.0, span / (1.0 / 16.0));
 
 			//新しい角度を計算
+			kineticsGen = Eigen::Quaterniond(ref(6), ref(3), ref(4), ref(5));
 			this->CalcAngleForJoints(timeStep, ref, VectorC::Zero(), this->defaultArguments.morments, this->defaultArguments.distance);
 
 			//std::cout << this->observer(this->GetAngleVelocities()) << std::endl;
@@ -331,13 +332,14 @@ namespace armJointSolver {
 
 		}
 
-		armInverseKineticsSolverForKenkyu(const std::function<VectorC(const VectorR&)>& func, const VectorR& defAngVelos, const VectorR& defAngs, const VectorC& kRatio) : armInverseKineticsSolver<T, dimR, dimC>(func, defAngVelos, defAngs) {
+		Eigen::Quaterniond kineticsGen;
+		armInverseKineticsSolverForKenkyu(const std::function<VectorC(const VectorR&, const Eigen::Quaterniond&)>& func, const VectorR& defAngVelos, const VectorR& defAngs, const VectorC& kRatio) : armInverseKineticsSolver<T, dimR, dimC>(std::bind(func,std::placeholders::_1,std::ref(this->kineticsGen)), defAngVelos, defAngs) {
 
 			this->kRatio = kRatio;
 			//モーメントを最適化しておく
 			this->defaultArguments.morments = Eigen::Matrix<double, 6, 1>(25, 25, 16, 9, 9, 4);
 		}
-		armInverseKineticsSolverForKenkyu(const std::function<VectorC(const VectorR&)>& func) :armInverseKineticsSolverForKenkyu(func, VectorR::Zero(), VectorR::Zero(), [&] {VectorC ret; for (size_t i = 0; i < dimC; i++)ret[i] = 5.0; return ret; }()) {
+		armInverseKineticsSolverForKenkyu(const std::function<VectorC(const VectorR&, const Eigen::Quaterniond&)>& func) :armInverseKineticsSolverForKenkyu(func, VectorR::Zero(), VectorR::Zero(), [&] {VectorC ret; for (size_t i = 0; i < dimC; i++)ret[i] = 5.0; return ret; }()) {
 
 		}
 	};

@@ -284,7 +284,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftPointer-mesh", glm::identity<glm::mat4>(), false));
 	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
 	kenkyu::gmeshs["cat"].reset(new kenkyulocal::offsetMesh(shaders["norm"], assets("kenkyuSet.dae"), "cat-mesh", kenkyu::reference.toMat(), glm::translate(glm::vec3(0, 1.5, -1.5))));
-	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets("rooms.dae"), "", glm::identity<glm::mat4>()));
+	//kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets("rooms.dae"), "", glm::identity<glm::mat4>()));
 
 	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets("plane.dae"), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -3))));
 	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets("screen.dae"), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
@@ -996,12 +996,31 @@ kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
 	Eigen::Vector3d pos(trans.translation());
 	//p¨‚ğŒ¸Z‚ª’è‹`‚Å‚«‚é‚æ‚¤‚É‚ ‚ç‚í‚·@‰ñ“]²‚ğz+‚Ì‹…–Ê‚Æz=0•½–Ê‚Åy>0‚Å³‹K‰»‚·‚é
 	Eigen::Quaterniond quat(trans.rotation());
-	/*if (quat.z() < 0.0)quat = Quaterniond(-quat.w(), -quat.x(), -quat.y(), -quat.x());
-	else if (quat.z() == 0.0 && quat.y() < 0.0)quat = Quaterniond(-quat.w(), -quat.x(), -quat.y(), -quat.x());
-	else if (quat.z() == 0.0 && quat.y() == 0.0 && quat.x() < 0.0)quat = Quaterniond(-quat.w(), -quat.x(), -quat.y(), -quat.x());
-	else if (quat.z() == 0.0 && quat.y() == 0.0 && quat.x() == 0.0)quat = Quaterniond(1, 0, 0, 0);*/
 
 	return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
+}
+kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond& gen) {
+
+	//ÀŒ±‘•’u‚É‡‚í‚¹‚½ƒA[ƒ€()
+	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
+	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), y) * AngleAxisd(q(4), z) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
+
+	//‚±‚±‚©‚çp¨‚ÆÀ•W‚ğ”²‚«o‚· p¨‚Ì•\Œ»‚ğ•Ï‚¦‚Ä‚İ‚é
+	Eigen::Vector3d pos(trans.translation());
+	//p¨‚ğŒ¸Z‚ª’è‹`‚Å‚«‚é‚æ‚¤‚É‚ ‚ç‚í‚·@‰ñ“]²‚ğz+‚Ì‹…–Ê‚Æz=0•½–Ê‚Åy>0‚Å³‹K‰»‚·‚é
+	Eigen::Quaterniond quat(trans.rotation());
+	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
+
+	system("cls");
+	cout << (gq - pq).squaredNorm() << "\t" << (gq - mq).squaredNorm() << endl;
+	if ((gq - pq).squaredNorm() < (gq - mq).squaredNorm()) {
+		cout << "a" << endl;
+		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
+	}
+	else {
+		cout << "B" << endl;
+		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z(), -quat.w());
+	}
 }
 
 
@@ -1163,7 +1182,7 @@ void kenkyu::SolveAngles() {
 	using VectorC = Eigen::Matrix<double, 7, 1>;
 
 	//ƒ\ƒ‹ƒo[‚ğ\¬
-	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikken));
+	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikkenWithGen));
 
 	//ƒ‹[ƒv‚ÌƒXƒpƒ“‚ğæ‚é‚½‚ß‚ÌŠÔ
 	size_t beforeTimepoint=uuu::app::GetTimeFromInit();
