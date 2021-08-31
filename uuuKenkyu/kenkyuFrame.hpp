@@ -223,8 +223,6 @@ namespace kenkyulocal {
 		static void InitAnyMembers();
 
 		//運動学を解く
-		static void _deleted_SolveAngles();//目標値まで近付けてから転送するver
-		static void _deleted2_SolveAngles();
 		static void SolveAngles();
 
 		//アーム用に角度の値域を制限して返す
