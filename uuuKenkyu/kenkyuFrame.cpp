@@ -5,7 +5,7 @@ using namespace uuu::easy::usings;
 using namespace kenkyulocal;
 using namespace Eigen;
 
-const int kenkyu::version = 101;
+const int kenkyu::version = 102;
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -284,7 +284,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["leftPointer"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftPointer-mesh", glm::identity<glm::mat4>(), false));
 	kenkyu::gmeshs["leftGoo"].reset(new uuu::game::mesh(shaders["norm"], assets("kenkyuSet.dae"), "leftGoo-mesh", glm::identity<glm::mat4>(),true));
 	kenkyu::gmeshs["cat"].reset(new kenkyulocal::offsetMesh(shaders["norm"], assets("kenkyuSet.dae"), "cat-mesh", kenkyu::reference.toMat(), glm::translate(glm::vec3(0, 1.5, -1.5))));
-	//kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets("rooms.dae"), "", glm::identity<glm::mat4>()));
+	kenkyu::gmeshs["room"].reset(new uuu::game::mesh(shaders["rainbow"], assets("rooms.dae"), "", glm::identity<glm::mat4>()));
 
 	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets("plane.dae"), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -3))));
 	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets("screen.dae"), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
@@ -572,7 +572,7 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 			kenkyu::kenkyuVr.hmd->GetControllerStateWithPose(vr::TrackingUniverseStanding, id, &controllerState, sizeof(controllerState), &devicePose);
 
 			
-			auto trans = kenkyu::TransVrMatToGmat4(devicePose.mDeviceToAbsoluteTracking);
+			auto trans = properties.vrRotYAxis * kenkyu::TransVrMatToGmat4(devicePose.mDeviceToAbsoluteTracking);
 			glm::vec3 pos = trans * gvec4(0, 0, 0, 1);
 			glm::quat q(trans);
 
@@ -639,7 +639,7 @@ void kenkyu::TrackingEvents(vr::VREvent_t event) {
 		else if (dev == vr::ETrackedDeviceClass::TrackedDeviceClass_HMD) {
 			kenkyu::kenkyuVr.hmd->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding, id, &devicePose, 1);
 
-			auto trans = kenkyu::TransVrMatToGmat4(devicePose.mDeviceToAbsoluteTracking);
+			auto trans = properties.vrRotYAxis * kenkyu::TransVrMatToGmat4(devicePose.mDeviceToAbsoluteTracking);
 			gvec3 pos =  trans* gvec4(0, 0, 0, 1);
 			gvec3 front = trans* gvec4(0, 0, 1, 0);
 			gvec3 up = trans* gvec4(0, 1, 0, 0);
@@ -948,6 +948,15 @@ void kenkyu::GetProperty(const std::string& path) {
 	else {
 		properties.enableDebugMode = false;
 		log("not found \"debugMode\" property. default value = false", logDebug);
+	}
+
+	if (boost::optional<double> rotationYAxisdt = pt.get_optional<double>("kenkyu.setup.vr.<xmlattr>.rotationYAxis")) {
+		properties.vrRotYAxis = glm::rotate((float)rotationYAxisdt.get(), glm::vec3(0, 1, 0));
+		kenkyu::log("property \"rotationYAxis\" = " + std::to_string(rotationYAxisdt.get()), logDebug);
+	}
+	else {
+		properties.vrRotYAxis = glm::identity<glm::mat4>();
+		log("not found \"rotation YAxis\" property. default value = 0.0", logDebug);
 	}
 
 	return;
