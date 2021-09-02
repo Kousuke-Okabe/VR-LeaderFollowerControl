@@ -95,6 +95,8 @@ namespace kenkyulocal {
 			bool enableVrSystem;//VRシステムを有効化する
 			bool enableSerialSystem;//シリアル通信を有効化する
 			bool enableDebugMode;//デバッグモードを有効化する
+
+			glm::mat4 vrRotYAxis;//VR関係行列を補正する
 		};
 		static _properties properties;
 		//サブシステムの起動状態を保存
