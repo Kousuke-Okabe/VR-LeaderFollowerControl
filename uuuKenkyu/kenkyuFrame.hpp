@@ -61,6 +61,15 @@ namespace kenkyulocal {
 		virtual __int8 Unbind()const;
 	};
 
+	//ビューポートサイズを指定の値にしてデストラクタで復帰する
+	class viewportSetterAndAutoReverter {
+	protected:
+		GLint retvp[4];
+	public:
+		viewportSetterAndAutoReverter(GLint vp[4]);
+		~viewportSetterAndAutoReverter();
+	};
+
 	//to_string フォーマット指定できる版
 	std::string to_stringf(double _Val, const char* format = "%.3f");
 
@@ -125,9 +134,11 @@ namespace kenkyulocal {
 
 		static uuu::vrMgr kenkyuVr;
 		//static std::vector<uuu::easy::neo3Dmesh> meshs;
-		static std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> gmeshs;
+		static std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> gmeshs;//メインシーン用のメッシュ
 		static std::unordered_map<std::string, std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> shaders;
 		static std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> textures;
+
+		static std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> meshesInMonitor;
 
 		static uuu::cameraPersp mainCamera, eyeR, eyeL;
 		static std::unique_ptr<uuu::frameBufferOperator> fboR, fboL;//VR用のフレーム

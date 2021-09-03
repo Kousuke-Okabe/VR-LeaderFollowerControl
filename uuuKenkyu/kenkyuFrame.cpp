@@ -10,6 +10,7 @@ const int kenkyu::version = 102;
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
 typename std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> kenkyu::gmeshs;
+typename std::unordered_map<std::string, std::unique_ptr<uuu::game::drawable>> kenkyu::meshesInMonitor;
 std::unordered_map<std::string,std::shared_ptr<uuu::shaderProgramObjectVertexFragment>> kenkyu::shaders;
 std::unordered_map<std::string, std::unique_ptr<uuu::textureOperator>> kenkyu::textures;
 uuu::cameraPersp kenkyu::mainCamera, kenkyu::eyeR, kenkyu::eyeL;
@@ -267,12 +268,14 @@ void kenkyu::InitGraphics() {
 	kenkyu::shaders["red"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/redNorm")));
 	kenkyu::shaders["virtualWindow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/virtualWindow")));
 	kenkyu::shaders["rainbow"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/rainbow")));
+	kenkyu::shaders["sprite"] = std::make_shared<uuu::shaderProgramObjectVertexFragment>(uuu::shaderProgramObjectVertexFragment(assets("shaders/sprite")));
 
 	//テクスチャを用意
 	//uuu::textureLoaderFromImageFile load;
 	textures["cat"].reset(new uuu::textureOperator());
-	//load.CreateTextureFromPNG(assets(cat.png), *textures.at("cat").get());
 	_uuu::textureLoaderByFreeImage::LoadTextureFromFile(assets("cat.png"), *textures.at("cat").get());
+	textures["challenge"].reset(new uuu::textureOperator());
+	_uuu::textureLoaderByFreeImage::LoadTextureFromFile(assets("challenge.png"), *textures.at("challenge").get());
 
 	//ステージのメッシュを追加
 	//kenkyu::gmeshs["monkey"]=uuu::game::mesh(shaders["norm"], assets(kenkyuSet.dae), "monkey-mesh", glm::translate(glm::identity<glm::mat4>(), gvec3(0, 0, 5)));
@@ -288,17 +291,17 @@ void kenkyu::InitGraphics() {
 
 	kenkyu::gmeshs["catplane"].reset(new uuu::game::texturedMesh(shaders["virtualWindow"], assets("plane.dae"), "Plane-mesh", textures.at("cat").get(), glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 2, -3))));
 	kenkyu::specialMeshs.inMonitor = new uuu::game::virtualWindow(shaders["virtualWindow"], assets("screen.dae"), "Plane-mesh", kenkyu::windowBounds.first, kenkyu::windowBounds.second, [&] {
+		uuu::app::ClearBuffer(uuu::app::color | uuu::app::depth);//画面クリア
 		DrawGui();
+
+		kenkyulocal::viewportSetterAndAutoReverter vp(std::array<GLint, 4>({ 0, 0, (GLint)(kenkyu::windowBounds.first * 0.6), (GLint)kenkyu::windowBounds.second }).data());
+		kenkyu::meshesInMonitor["challenge"]->Draw();
 		}, glm::translate(glm::identity<glm::mat4>(), glm::vec3(-2, 1.5, -2)));
 	kenkyu::gmeshs["inMonitor"].reset(kenkyu::specialMeshs.inMonitor);
 
-	/*
-	kenkyu::gmeshs["armb"].reset(new uuu::game::mesh(shaders["rainbow"], assets("arm.dae"), "base-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
-	kenkyu::gmeshs["arm0"].reset(new uuu::game::mesh(shaders["norm"], assets("arm.dae"), "link0-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
-	kenkyu::gmeshs["arm1"].reset(new uuu::game::mesh(shaders["rainbow"], assets("arm.dae"), "link1-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
-	kenkyu::gmeshs["arm2"].reset(new uuu::game::mesh(shaders["norm"], assets("arm.dae"), "link2-mesh", glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 0, -1.5))));
-	*/
 	kenkyu::gmeshs["arm"].reset(new kenkyuArmMeshSet(&shaders,glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1.5, -1.5))));
+
+	kenkyu::meshesInMonitor["challenge"].reset(new uuu::game::texturedMesh(shaders["sprite"], assets("plane.dae"), "Plane-mesh", textures.at("challenge").get(), glm::identity<glm::mat4>()));
 
 	log("assets was loaded");
 
@@ -1250,7 +1253,16 @@ __int8 kenkyulocal::fboOperatorWithViewport::Unbind()const {
 	return super::Unbind();
 }
 
+kenkyulocal::viewportSetterAndAutoReverter::viewportSetterAndAutoReverter(GLint vp[4]) {
 
+	glGetIntegerv(GL_VIEWPORT, retvp);
+
+	glViewport(vp[0], vp[1], vp[2], vp[3]);
+
+}
+kenkyulocal::viewportSetterAndAutoReverter::~viewportSetterAndAutoReverter() {
+	glViewport(retvp[0], retvp[1], retvp[2], retvp[3]);
+}
 
 
 
