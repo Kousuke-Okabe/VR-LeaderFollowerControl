@@ -316,8 +316,8 @@ void kenkyu::InitGraphics() {
 
 		//VRのフレームバッファを作成
 
-		kenkyu::fboR.reset(new uuu::frameBufferOperator());
-		kenkyu::fboL.reset(new uuu::frameBufferOperator());
+		kenkyu::fboR.reset(new kenkyulocal::fboOperatorWithViewport(kenkyuVr.ww, kenkyuVr.wh));
+		kenkyu::fboL.reset(new kenkyulocal::fboOperatorWithViewport(kenkyuVr.ww, kenkyuVr.wh));
 
 		kenkyu::colR.reset(new uuu::textureOperator());
 		kenkyu::colL.reset(new uuu::textureOperator());
@@ -1220,6 +1220,36 @@ inline string kenkyulocal::to_stringf(double _Val, const char* format) {
 	_CSTD sprintf_s(&_Str[0], _Len + 1, format, _Val);
 	return _Str;
 }
+
+kenkyulocal::fboOperatorWithViewport::fboOperatorWithViewport(size_t u, size_t v, size_t defu, size_t defv):super(), u(u), v(v), defu(defu), defv(defv) {
+	this->returnAutoSize = false;
+}
+kenkyulocal::fboOperatorWithViewport::fboOperatorWithViewport(size_t u, size_t v) : super(), u(u), v(v){
+	this->returnAutoSize = true;
+}
+
+__int8 kenkyulocal::fboOperatorWithViewport::Bind(){
+
+	if (returnAutoSize) {
+		GLint viewport[4];
+		glGetIntegerv(
+			GL_VIEWPORT,// GLenum pname
+			viewport);
+
+		this->defu = viewport[2];
+		this->defv = viewport[3];
+	}
+
+	glViewport(0, 0, u, v);
+	return super::Bind();
+}
+__int8 kenkyulocal::fboOperatorWithViewport::Unbind()const {
+
+	glViewport(0, 0, defu, defv);
+
+	return super::Unbind();
+}
+
 
 
 

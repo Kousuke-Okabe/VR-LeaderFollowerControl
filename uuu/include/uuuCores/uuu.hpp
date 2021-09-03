@@ -881,8 +881,8 @@ namespace uuu {
 
 	public:
 		frameBufferOperator();
-		__int8 Bind() const;
-		__int8 Unbind() const;
+		virtual __int8 Bind();
+		virtual __int8 Unbind() const;
 
 		enum attachTargetType {
 			color0 = GL_COLOR_ATTACHMENT0,

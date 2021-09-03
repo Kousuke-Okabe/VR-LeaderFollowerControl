@@ -46,6 +46,21 @@
 
 namespace kenkyulocal {
 
+	//viewportつけれるfboオペレータ
+	class fboOperatorWithViewport:public uuu::frameBufferOperator {
+		using super = uuu::frameBufferOperator;
+	protected:
+		size_t u, v;
+		size_t defu, defv;
+		bool returnAutoSize;//デフォルトサイズ==0で自動復帰
+	public:
+		fboOperatorWithViewport(size_t u, size_t v, size_t defu, size_t defv);
+		fboOperatorWithViewport(size_t u, size_t v);
+
+		virtual __int8 Bind();
+		virtual __int8 Unbind()const;
+	};
+
 	//to_string フォーマット指定できる版
 	std::string to_stringf(double _Val, const char* format = "%.3f");
 

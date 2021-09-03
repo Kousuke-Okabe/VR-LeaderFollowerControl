@@ -2139,7 +2139,7 @@ uuu::frameBufferOperator::frameBufferOperator() {
 	glGenFramebuffers(1, &this->fbo);
 
 }
-__int8 uuu::frameBufferOperator::Bind() const{
+__int8 uuu::frameBufferOperator::Bind(){
 	glBindFramebuffer(GL_FRAMEBUFFER, this->fbo);
 
 	return true;
@@ -2174,6 +2174,7 @@ __int8 uuu::renderBufferOperator::SetStrage(int format, GLuint width, GLuint hei
 	this->Bind();
 	glRenderbufferStorage(GL_RENDERBUFFER, format, width, height);
 
+
 	return true;
 
 }
@@ -2184,6 +2185,7 @@ __int8 uuu::frameBufferOperator::AttachRenderBufferOperator(const attachTargetTy
 	obj.Bind();
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, target, GL_RENDERBUFFER, obj.rbo);
 
+	this->Unbind();
 	return true;
 }
 __int8 uuu::frameBufferOperator::AttachTextureOperator(int target, const uuu::textureOperator& obj) {
@@ -2191,6 +2193,7 @@ __int8 uuu::frameBufferOperator::AttachTextureOperator(int target, const uuu::te
 	obj.Bind();
 	glFramebufferTexture2DEXT(GL_FRAMEBUFFER, target, GL_TEXTURE_2D, obj.texture, 0);
 
+	this->Unbind();
 	return true;
 }
 
