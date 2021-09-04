@@ -1073,19 +1073,20 @@ void kenkyu::SolveAngles() {
 			//二つの値の値域を整える　0~2piにする　値域を中央に寄せる +-pi->値域を制限する +-150度(単位はラジアン)
 			auto correctedAngles = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(jointAngles)));
 
-			//スパンを取る 単位はセンチ秒
-			auto nowTimepoint = uuu::app::GetTimeFromInit();
-			double span = (nowTimepoint - beforeTimepoint) / 10;
-			beforeTimepoint = nowTimepoint;
+			//sleepの直後から現在までの時間をとる
+			auto distWithoutSleep = uuu::app::GetTimeFromInit() - beforeTimepoint;
+
+			//スレッドのスパン管理をする
+			std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - distWithoutSleep))));
 
 			//スパンをシェアする
+			double span = max(100.0 / 20.0,distWithoutSleep * 10.0);
 			{
 				std::lock_guard<std::mutex> lock(solverSpanRateShareMutex);
 				solverSpanRateShare = span;
 			}
 
-			//スレッドのスパン管理をする
-			std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - span * 10.0))));
+			beforeTimepoint = uuu::app::GetTimeFromInit();
 
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			
@@ -1102,7 +1103,7 @@ void kenkyu::SolveAngles() {
 
 
 			//更新にカウントをセットする
-			kenkyu::solverState.SetUpdate(2);
+			kenkyu::solverState.SetUpdate(1);
 
 			//ログファイルに書き込む
 			//auto now = std::chrono::system_clock::now();
