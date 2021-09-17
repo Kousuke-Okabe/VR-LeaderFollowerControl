@@ -43,6 +43,8 @@ namespace kenkyulocal {
     };
 
     class umeArmTransfer:protected serialMgr {
+        using super = serialMgr;
+    protected:
         size_t count;//命令の送信回数
         std::string stack;//返信をためておく
         std::regex successFormat;
@@ -65,5 +67,6 @@ namespace kenkyulocal {
         void Position(unsigned int id, glm::vec3 pos, int time=1000);//位置を操作する
         void PositionQuat(unsigned int id, glm::vec3 pos, glm::quat q, int time=1000);//位置と姿勢を操作する
 
+        void Read(std::vector<uint8_t>& buf);//シリアルポートからデータを貰う
     };
 };

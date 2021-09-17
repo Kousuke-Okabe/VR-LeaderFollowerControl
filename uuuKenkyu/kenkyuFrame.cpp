@@ -51,6 +51,8 @@ kenkyu::_specialMeshs kenkyu::specialMeshs;
 
 
 uuu::textureOperator depr, depl;
+
+kenkyu::_movieBufferCraft kenkyu::movieBufferCraft;
 //std::unique_ptr<uuu::textureOperator> debugTex;
 
 //std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
@@ -423,6 +425,9 @@ void kenkyu::Event() {
 	//VR関係のイベント
 	if (kenkyu::systemBootFlags.vr)kenkyu::kenkyuVr.Event(kenkyu::CallbackVrEvents);
 
+	//シリアルポートからフレームもらえるかもね
+	if (properties.enableSerialSystem)kenkyu::MovieEvent();
+
 	//GUI関係のイベント
 	kenkyu::GuiEvents();
 	
@@ -431,6 +436,77 @@ void kenkyu::Event() {
 		kenkyu::DebugEvent();
 	
 }
+
+void kenkyu::MovieEvent() {
+	std::vector<uint8_t> buffer;
+	kenkyu::armTransfer->Read(buffer);
+
+	movieBufferCraft(buffer);
+}
+
+void kenkyu::_movieBufferCraft::operator()(const std::vector<uint8_t>& buf) {
+
+	//4フレーム連続0ならフレーム開始符号なのでそれを探す
+	std::vector<uint8_t>::const_iterator begite;
+	if (this->findBegin(buf,begite)) {
+		stack.clear();
+
+		//開始符号が見つかったらスタックする
+		for (auto i = begite; i != buf.end(); i++)
+			stack.push_back(*i);
+	}
+	else {
+		//そうでなければスタックに貯める
+		for (auto i = buf.begin(); i != buf.end(); i++)
+			stack.push_back(*i);
+	}
+
+	std::cout << std::string(stack.begin(), stack.end())<<endl;
+}
+kenkyu::_movieBufferCraft::_movieBufferCraft() {
+}
+bool kenkyu::_movieBufferCraft::findBegin(const std::vector<uint8_t>& buf, std::vector<uint8_t>::const_iterator& ret) {
+	
+	ret = buf.end();
+
+	if (buf.empty())return false;
+
+	//スタックの後ろから0を探す
+	size_t bornus = 0;
+	for (size_t i = 0; i<3 && stack.size()>i; i++)
+		if (this->stack.at(stack.size() - 1 - i) == '0')bornus++;
+		else break;
+
+	auto ite = buf.begin();
+	while (1) {
+		auto found = std::find(ite, buf.end(), '0');
+		//みつからなければbreak
+		if (found == buf.end())return false;
+
+		//開始符号を含めるかチェック
+		if (std::distance(found, buf.end()) < 4 - bornus)return false;
+
+		//必要な分0を数える
+		int processdone = -1;
+		for (size_t i = 0; i < 4 - bornus; i++) {
+			if (*(found + i) == '0') {
+				processdone = i;
+				continue;
+			}
+			else {
+				//この0ではないのかもしれない
+				ite = found + i;
+				break;
+			}
+		}
+		if (processdone != -1) {
+			ret = found + (4 - bornus);
+			return true;
+		}
+		
+	}
+}
+
 
 void kenkyu::DebugEvent() {
 
@@ -481,13 +557,13 @@ void kenkyu::DebugEvent() {
 
 void kenkyu::CallbackVrEvents(vr::VREvent_t event) {
 
-	kenkyu::GeneralEvents(event);
-	kenkyu::SceneEvents(event);
-	kenkyu::TrackingEvents(event);
+	kenkyu::VrGeneralEvents(event);
+	kenkyu::VrSceneEvents(event);
+	kenkyu::VrTrackingEvents(event);
 
 }
 
-void kenkyu::SceneEvents(vr::VREvent_t event) {
+void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 
 	enum { invalid = 0, right = 1, left = 2 }hand = invalid;//どの手の?
 	{
@@ -548,12 +624,12 @@ void kenkyu::SceneEvents(vr::VREvent_t event) {
 
 	}
 }
-void kenkyu::GeneralEvents(vr::VREvent_t event) {
+void kenkyu::VrGeneralEvents(vr::VREvent_t event) {
 	if (event.eventType == vr::VREvent_TrackedDeviceActivated) {
 		log("device " + std::to_string(event.trackedDeviceIndex) + "attached");
 	}
 }
-void kenkyu::TrackingEvents(vr::VREvent_t event) {
+void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 	//デバイスの最大数取り出す
 	for (size_t id = 0; id < vr::k_unMaxTrackedDeviceCount; id++) {
 

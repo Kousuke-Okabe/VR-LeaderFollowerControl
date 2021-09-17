@@ -16,6 +16,8 @@ int main() {
 		while (uuu::app::PollMesageForBind() && kenkyu::continueLoop) {
 			kenkyu::Event();
 			kenkyu::Draw();
+
+			//break;
 		}
 
 		kenkyu::log("Main loop was broken.");

@@ -32,6 +32,9 @@
 
 #include "TextureManager.h"
 
+
+#include <opencv2/opencv.hpp>
+
 #ifdef _DEBUG
 #pragma comment (lib, "LinearMath_Debug.lib")
 #pragma comment (lib, "BulletCollision_Debug.lib")
@@ -233,16 +236,28 @@ namespace kenkyulocal {
 		static void CallbackVrEvents(vr::VREvent_t event);
 
 		//汎用イベントの処理　デバイスの追加やロールの変更などシステム的 callbackvreventsから呼び出して
-		static void GeneralEvents(vr::VREvent_t event);
+		static void VrGeneralEvents(vr::VREvent_t event);
 		//シーンイベントの処理　つかむとか動作指示とか　callbackvreventsから呼び出して
-		static void SceneEvents(vr::VREvent_t event);
+		static void VrSceneEvents(vr::VREvent_t event);
 		//トラッキング処理　コントローラとの姿勢を吸い出す
-		static void TrackingEvents(vr::VREvent_t event);
+		static void VrTrackingEvents(vr::VREvent_t event);
 
 		//GUIイベントの処理
 		static void GuiEvents();
 		//デバックのイベント
 		static void DebugEvent();
+		//フレーム通信イベント
+		static void MovieEvent();
+		class _movieBufferCraft {
+			//微小結果を集積してフレームデータを作成する
+		protected:
+			std::deque<uint8_t> stack;//断片データを集める
+		public:
+			void operator()(const std::vector<uint8_t>& buf);
+			_movieBufferCraft();
+			bool findBegin(const std::vector<uint8_t>& buf, std::vector<uint8_t>::const_iterator& ret);
+		};
+		static _movieBufferCraft movieBufferCraft;
 
 		//kenkyuのプロパティーをプロパティシートから読み出す
 		static void GetProperty(const std::string& path);

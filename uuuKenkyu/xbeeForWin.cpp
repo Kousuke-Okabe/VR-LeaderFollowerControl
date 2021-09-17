@@ -197,7 +197,7 @@ void umeArmTransfer::WriteWithCount(const std::string& dat) {
 
 void umeArmTransfer::Update() {
     std::string add;
-    this->Read(add);
+    super::Read(add);
     auto nowbuf=this->stack += add;
 
     smatch rez;
@@ -236,3 +236,18 @@ void umeArmTransfer::Position(unsigned int id, glm::vec3 pos, int time) {
 void umeArmTransfer::PositionQuat(unsigned int id, glm::vec3 pos, glm::quat q, int time) {
     this->WriteWithCount("P" + to_string(pos.x) + "," + to_string(pos.y) + "," + to_string(pos.z) + "," + to_string(q.x) + "," + to_string(q.y) + "," + to_string(q.z) + "," + to_string(q.w) + "," + to_string(time) + ":" + to_string(id));
 }
+
+void umeArmTransfer::Read(std::vector<uint8_t>& buf) {
+    super::Read(buf);
+}
+
+
+
+
+
+
+
+
+
+
+
