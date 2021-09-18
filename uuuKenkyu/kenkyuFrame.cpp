@@ -53,6 +53,7 @@ kenkyu::_specialMeshs kenkyu::specialMeshs;
 uuu::textureOperator depr, depl;
 
 kenkyu::_movieBufferCraft kenkyu::movieBufferCraft;
+cv::Mat kenkyu::movieFrameMat;
 //std::unique_ptr<uuu::textureOperator> debugTex;
 
 //std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
@@ -304,6 +305,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["arm"].reset(new kenkyuArmMeshSet(&shaders,glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1.5, -1.5))));
 
 	kenkyu::meshesInMonitor["challenge"].reset(new uuu::game::texturedMesh(shaders["sprite"], assets("plane.dae"), "Plane-mesh", textures.at("challenge").get(), glm::identity<glm::mat4>()));
+	if (systemBootFlags.serial)kenkyu::movieFrameMat = cv::Mat::zeros(800,600, CV_8U);
 
 	log("assets was loaded");
 
@@ -442,6 +444,18 @@ void kenkyu::MovieEvent() {
 	kenkyu::armTransfer->Read(buffer);
 
 	movieBufferCraft(buffer);
+
+	//フレームが存在するのなら
+	auto frameNum = movieBufferCraft.stack.size() / 4;
+	if (!frameNum)return;
+
+
+	//ムービーフレームを作る
+	kenkyu::movieFrameMat = cv::Mat::ones(cv::Size(kenkyu::movieFrameMat.rows, kenkyu::movieFrameMat.cols), CV_8U)*255;
+
+	//テクスチャを書き換え
+	textures.at("challenge").get()->UpdateTextureData(kenkyu::movieFrameMat.rows, kenkyu::movieFrameMat.cols, GL_LUMINANCE, movieFrameMat.data);
+
 }
 
 void kenkyu::_movieBufferCraft::operator()(const std::vector<uint8_t>& buf) {

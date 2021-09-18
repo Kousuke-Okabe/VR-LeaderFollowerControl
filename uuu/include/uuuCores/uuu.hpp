@@ -954,6 +954,9 @@ namespace uuu {
 			return texture;
 		}
 
+		//テクスチャを更新する
+		void UpdateTextureData(GLuint width, GLuint height, GLuint format, void* data);
+
 		~textureOperator();
 	};
 	//テクスチャローダー

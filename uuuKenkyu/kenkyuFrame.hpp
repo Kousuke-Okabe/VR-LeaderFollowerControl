@@ -250,7 +250,7 @@ namespace kenkyulocal {
 		static void MovieEvent();
 		class _movieBufferCraft {
 			//微小結果を集積してフレームデータを作成する
-		protected:
+		public:
 			std::deque<uint8_t> stack;//断片データを集める
 		public:
 			void operator()(const std::vector<uint8_t>& buf);
@@ -258,6 +258,7 @@ namespace kenkyulocal {
 			bool findBegin(const std::vector<uint8_t>& buf, std::vector<uint8_t>::const_iterator& ret);
 		};
 		static _movieBufferCraft movieBufferCraft;
+		static cv::Mat movieFrameMat;//フレーム
 
 		//kenkyuのプロパティーをプロパティシートから読み出す
 		static void GetProperty(const std::string& path);
