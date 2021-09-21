@@ -33,6 +33,7 @@ namespace kenkyulocal {
         void Init(const std::string& portname);
 
         serialMgr();
+        ~serialMgr();
         serialMgr(const std::string& portname);
 
         void Write(const std::vector<uint8_t>& buf);
@@ -56,6 +57,7 @@ namespace kenkyulocal {
         std::list<unsigned int>unsuccess;//¬Œ÷”»’è‚ª‹A‚Á‚Ä‚«‚Ä‚È‚¢id
 
         umeArmTransfer(const std::string& portname);
+        
         void Update();
 
         void Emergency();//ŠëŒ¯ó‘Ô‚É‘Sg‚ğ’E—Í‚·‚é

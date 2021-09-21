@@ -5,6 +5,10 @@ using namespace kenkyulocal;
 serialMgr::serialMgr(){
     inited=0;
 }
+serialMgr::~serialMgr() {
+    if (com != INVALID_HANDLE_VALUE)
+        CloseHandle(com);
+}
 serialMgr::serialMgr(const std::string&portname):serialMgr(){
     Init(portname);
 }
@@ -51,7 +55,10 @@ void serialMgr::Init(const std::string&portname){
     check&=SetupTimeout(com);
     check&=(com>=0);
 
-    if(!check)throw std::runtime_error("Any error happened");
+    if (!check) {
+        CloseHandle(com);
+        throw std::runtime_error("Any error happened");
+    }
 
     inited=1;
 }
@@ -78,8 +85,8 @@ HANDLE serialMgr::OpenCOM(const std::string&portname){
             NULL       // テンプレートファイルへのハンドル:NULLって書け
     );
     if (hComPort == INVALID_HANDLE_VALUE){//ポートの取得に失敗
-    CloseHandle(hComPort);//ポートを閉じる
-    throw std::runtime_error("Cant open "+portname);
+        //CloseHandle(hComPort);//ポートを閉じる
+        throw std::runtime_error("Cant open "+portname);
     }
     else{
         printf("finish openning serial port.\n");

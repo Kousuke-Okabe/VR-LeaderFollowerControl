@@ -1568,6 +1568,7 @@ void uuu::textureOperator::UpdateTextureData(GLuint width, GLuint height, GLuint
 	//ユニットをアクティブに&テクスチャ生成
 	this->Bind();
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE, data);
+	//glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 }
 
 __int8 uuu::textureLoaderFromImageFile::CreateTextureFromPNG(const std::string path, uuu::textureOperator& ret,size_t texUnit) {

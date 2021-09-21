@@ -305,7 +305,7 @@ void kenkyu::InitGraphics() {
 	kenkyu::gmeshs["arm"].reset(new kenkyuArmMeshSet(&shaders,glm::translate(glm::identity<glm::mat4>(), glm::vec3(0, 1.5, -1.5))));
 
 	kenkyu::meshesInMonitor["challenge"].reset(new uuu::game::texturedMesh(shaders["sprite"], assets("plane.dae"), "Plane-mesh", textures.at("challenge").get(), glm::identity<glm::mat4>()));
-	if (systemBootFlags.serial)kenkyu::movieFrameMat = cv::Mat::zeros(800,600, CV_8U);
+	if (systemBootFlags.serial)kenkyu::movieFrameMat = cv::Mat::zeros(cv::Size(800, 600), CV_8U);
 
 	log("assets was loaded");
 
@@ -428,7 +428,7 @@ void kenkyu::Event() {
 	if (kenkyu::systemBootFlags.vr)kenkyu::kenkyuVr.Event(kenkyu::CallbackVrEvents);
 
 	//シリアルポートからフレームもらえるかもね
-	if (properties.enableSerialSystem)kenkyu::MovieEvent();
+	if (systemBootFlags.serial)kenkyu::MovieEvent();
 
 	//GUI関係のイベント
 	kenkyu::GuiEvents();
@@ -451,10 +451,13 @@ void kenkyu::MovieEvent() {
 
 
 	//ムービーフレームを作る
-	kenkyu::movieFrameMat = cv::Mat::ones(cv::Size(kenkyu::movieFrameMat.rows, kenkyu::movieFrameMat.cols), CV_8U)*255;
+	kenkyu::movieFrameMat = cv::Mat::zeros(cv::Size(kenkyu::movieFrameMat.size().width, kenkyu::movieFrameMat.size().height), CV_8U);
+
+	for (size_t i = 0; i < frameNum; i++)
+		cv::line(kenkyu::movieFrameMat, cv::Point2i((double)movieBufferCraft.stack.at(i*4+0)/255.0*800.0, (double)movieBufferCraft.stack.at(i * 4 + 1) / 255.0 * 600.0), cv::Point2i((double)movieBufferCraft.stack.at(i * 4 + 2) / 255.0 * 800.0, (double)movieBufferCraft.stack.at(i * 4 + 3) / 255.0 * 600.0), cv::Scalar(255, 255, 255), 5);
 
 	//テクスチャを書き換え
-	textures.at("challenge").get()->UpdateTextureData(kenkyu::movieFrameMat.rows, kenkyu::movieFrameMat.cols, GL_LUMINANCE, movieFrameMat.data);
+	textures.at("challenge").get()->UpdateTextureData(kenkyu::movieFrameMat.size().width, kenkyu::movieFrameMat.size().height, GL_LUMINANCE, movieFrameMat.data);
 
 }
 
@@ -488,12 +491,12 @@ bool kenkyu::_movieBufferCraft::findBegin(const std::vector<uint8_t>& buf, std::
 	//スタックの後ろから0を探す
 	size_t bornus = 0;
 	for (size_t i = 0; i<3 && stack.size()>i; i++)
-		if (this->stack.at(stack.size() - 1 - i) == '0')bornus++;
+		if (this->stack.at(stack.size() - 1 - i) == 0)bornus++;
 		else break;
 
 	auto ite = buf.begin();
 	while (1) {
-		auto found = std::find(ite, buf.end(), '0');
+		auto found = std::find(ite, buf.end(), 0);
 		//みつからなければbreak
 		if (found == buf.end())return false;
 
@@ -503,7 +506,7 @@ bool kenkyu::_movieBufferCraft::findBegin(const std::vector<uint8_t>& buf, std::
 		//必要な分0を数える
 		int processdone = -1;
 		for (size_t i = 0; i < 4 - bornus; i++) {
-			if (*(found + i) == '0') {
+			if (*(found + i) == 0) {
 				processdone = i;
 				continue;
 			}
