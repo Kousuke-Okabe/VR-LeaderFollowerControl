@@ -122,6 +122,7 @@ namespace kenkyulocal {
 			bool enableVrSystem;//VRシステムを有効化する
 			bool enableSerialSystem;//シリアル通信を有効化する
 			bool enableDebugMode;//デバッグモードを有効化する
+			bool enableMovie;//動画送信を有効化する
 
 			glm::mat4 vrRotYAxis;//VR関係行列を補正する
 		};
@@ -170,6 +171,11 @@ namespace kenkyulocal {
 		struct _actionWarehouse {
 			int rhandtype;//0:hand 1:pointer 2:goo
 			int lhandtype;
+
+			//グリッパーの度数 +-144度(暫定)
+			int rHandingAngle, lHandingAngle;
+
+			_actionWarehouse();
 		};
 		static _actionWarehouse actionWarehouse;
 

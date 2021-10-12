@@ -5,7 +5,7 @@ using namespace uuu::easy::usings;
 using namespace kenkyulocal;
 using namespace Eigen;
 
-const int kenkyu::version = 102;
+const int kenkyu::version = 103;
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -429,7 +429,7 @@ void kenkyu::Event() {
 	if (kenkyu::systemBootFlags.vr)kenkyu::kenkyuVr.Event(kenkyu::CallbackVrEvents);
 
 	//シリアルポートからフレームもらえるかもね
-	if (systemBootFlags.serial)kenkyu::MovieEvent();
+	if (systemBootFlags.serial && properties.enableMovie)kenkyu::MovieEvent();
 
 	//GUI関係のイベント
 	kenkyu::GuiEvents();
@@ -601,8 +601,10 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 			}
 		}
 	}
-	enum { other = 0, grip = 1, trigger = 2 }action = other;//どのアクションか
+	enum { other = 0, grip = 1, trigger = 2, handing = 3 }action = other;//どのアクションか
 	{
+		if (event.data.controller.button == vr::k_EButton_DPad_Down)
+			action = handing;
 		if (event.data.controller.button == vr::k_EButton_SteamVR_Trigger)
 			action = trigger;
 		else if (event.data.controller.button == vr::k_EButton_Grip)
@@ -620,26 +622,34 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 
 	//こいつらが有効ならアクション処理を行う
 	if (hand && action && edge) {
-		//log("scene event " + std::to_string(hand) + " " + std::to_string(action) + " " + std::to_string(edge), logDebug);
-		//トリガー中はフラグを立てる
-		auto& nowtype = (hand == right) ? actionWarehouse.rhandtype : actionWarehouse.lhandtype;
+		//手先の処理かトラッキング処理か
+		if (action == handing) {
+			auto& nowtype = (hand == right) ? actionWarehouse.rHandingAngle : actionWarehouse.lHandingAngle;
+			auto angle = (edge == press) ? 144 : -144;
 
-		if (action == trigger && edge == press)nowtype = 2;
-		else if (action == grip && edge == press)nowtype = 0;
-		else if (edge == unpress)nowtype = 1;
-
-		//アクションがあったとき表示状態を切り替える
-		if (hand == right) {
-			kenkyu::gmeshs["rightHand"]->skipDraw = !(actionWarehouse.rhandtype == 0);
-			kenkyu::gmeshs["rightPointer"]->skipDraw = !(actionWarehouse.rhandtype == 1);
-			kenkyu::gmeshs["rightGoo"]->skipDraw = !(actionWarehouse.rhandtype == 2);
+			nowtype = angle;//ターゲットに目標角を代入
 		}
-		else if (hand == left) {
-			kenkyu::gmeshs["leftHand"]->skipDraw = !(actionWarehouse.lhandtype == 0);
-			kenkyu::gmeshs["leftPointer"]->skipDraw = !(actionWarehouse.lhandtype == 1);
-			kenkyu::gmeshs["leftGoo"]->skipDraw = !(actionWarehouse.lhandtype == 2);
-		}
+		else {
+			//log("scene event " + std::to_string(hand) + " " + std::to_string(action) + " " + std::to_string(edge), logDebug);
+			//トリガー中はフラグを立てる
+			auto& nowtype = (hand == right) ? actionWarehouse.rhandtype : actionWarehouse.lhandtype;
 
+			if (action == trigger && edge == press)nowtype = 2;
+			else if (action == grip && edge == press)nowtype = 0;
+			else if (edge == unpress)nowtype = 1;
+
+			//アクションがあったとき表示状態を切り替える
+			if (hand == right) {
+				kenkyu::gmeshs["rightHand"]->skipDraw = !(actionWarehouse.rhandtype == 0);
+				kenkyu::gmeshs["rightPointer"]->skipDraw = !(actionWarehouse.rhandtype == 1);
+				kenkyu::gmeshs["rightGoo"]->skipDraw = !(actionWarehouse.rhandtype == 2);
+			}
+			else if (hand == left) {
+				kenkyu::gmeshs["leftHand"]->skipDraw = !(actionWarehouse.lhandtype == 0);
+				kenkyu::gmeshs["leftPointer"]->skipDraw = !(actionWarehouse.lhandtype == 1);
+				kenkyu::gmeshs["leftGoo"]->skipDraw = !(actionWarehouse.lhandtype == 2);
+			}
+		}
 	}
 }
 void kenkyu::VrGeneralEvents(vr::VREvent_t event) {
@@ -827,7 +837,7 @@ void kenkyu::GuiEvents() {
 		double solverSpan;//単位はセンチ秒
 		{
 			std::lock_guard<std::mutex> lock(solverSpanRateShareMutex);
-			solverSpan = solverSpanRateShare;
+			solverSpan = 1.0 / solverSpanRateShare;
 		}
 		ImGui::Text("solver span rate");
 		if (systemBootFlags.serial||properties.enableDebugMode) ImGui::Text((std::string(" ") + to_stringf(1.0 / (solverSpan / 100.0))).c_str());
@@ -1056,12 +1066,20 @@ void kenkyu::GetProperty(const std::string& path) {
 		log("not found \"rotation YAxis\" property. default value = 0.0", logDebug);
 	}
 
+	if (boost::optional<bool> enableMoviedt = pt.get_optional<bool>("kenkyu.setup.system.<xmlattr>.enableMovie")) {
+		properties.enableMovie = enableMoviedt.get();
+		kenkyu::log("property \"enable movie\" = " + std::to_string(properties.enableMovie), logDebug);
+	}
+	else {
+		properties.enableMovie = false;
+		log("not found \"enable movie\" property. default value = false", logDebug);
+	}
 	return;
 }
 
 void kenkyu::InitAnyMembers() {
-	kenkyu::actionWarehouse.rhandtype = 1;
-	kenkyu::actionWarehouse.lhandtype = 1;
+	//kenkyu::actionWarehouse.rhandtype = 1;
+	//kenkyu::actionWarehouse.lhandtype = 1;
 
 	for (int th = 0; th < 6; th++)
 		kenkyu::serialWriteThreads.at(th).release();
@@ -1185,7 +1203,7 @@ void kenkyu::SolveAngles() {
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			
 			//角度を送信する
-			if(properties.enableSerialSystem)
+			if (properties.enableSerialSystem) {
 				for (size_t m = 1; m <= 6; m++) {
 					//スレッドが存在すればjoin
 					//if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
@@ -1194,6 +1212,10 @@ void kenkyu::SolveAngles() {
 					kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
 					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
 				}
+				//グリッパーも送信
+				kenkyu::armTransfer->Move(7, ToHutabaDegreeFromRadians(kenkyu::actionWarehouse.rHandingAngle));
+				
+			}
 
 
 			//更新にカウントをセットする
@@ -1361,3 +1383,9 @@ kenkyulocal::viewportSetterAndAutoReverter::~viewportSetterAndAutoReverter() {
 
 
 
+kenkyu::_actionWarehouse::_actionWarehouse() {
+	this->rhandtype = 1;
+	this->lhandtype = 1;
+	this->rHandingAngle = 0;
+	this->lHandingAngle = 0;
+}
