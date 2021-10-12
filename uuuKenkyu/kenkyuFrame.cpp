@@ -1056,9 +1056,9 @@ void kenkyu::GetProperty(const std::string& path) {
 		properties.enableDebugMode = false;
 		log("not found \"debugMode\" property. default value = false", logDebug);
 	}
-
+	
 	if (boost::optional<double> rotationYAxisdt = pt.get_optional<double>("kenkyu.setup.vr.<xmlattr>.rotationYAxis")) {
-		properties.vrRotYAxis = glm::rotate((float)rotationYAxisdt.get(), glm::vec3(0, 1, 0));
+		properties.vrRotYAxis = glm::rotate((float)(rotationYAxisdt.get() * (M_PI / 180.0)), glm::vec3(0, 1, 0));
 		kenkyu::log("property \"rotationYAxis\" = " + std::to_string(rotationYAxisdt.get()), logDebug);
 	}
 	else {
