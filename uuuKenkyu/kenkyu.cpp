@@ -5,6 +5,7 @@ using namespace std;
 using namespace kenkyulocal;
 
 int main() {
+
 	try {
 		kenkyu::BootUuuSetForKekyu();
 		//グラフィックを用意する

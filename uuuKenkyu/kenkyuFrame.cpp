@@ -424,6 +424,7 @@ void kenkyu::log(const std::string name, glm::quat v4, logState st) {
 }
 
 void kenkyu::Event() {
+
 	//VRŠÖŒW‚ÌƒCƒxƒ“ƒg
 	if (kenkyu::systemBootFlags.vr)kenkyu::kenkyuVr.Event(kenkyu::CallbackVrEvents);
 
