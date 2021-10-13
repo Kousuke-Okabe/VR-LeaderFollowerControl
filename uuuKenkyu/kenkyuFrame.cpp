@@ -603,8 +603,9 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 	}
 	enum { other = 0, grip = 1, trigger = 2, handing = 3 }action = other;//どのアクションか
 	{
-		if (event.data.controller.button == vr::k_EButton_DPad_Down)
+		if (event.data.controller.button == vr::k_EButton_SteamVR_Touchpad) {
 			action = handing;
+		}
 		if (event.data.controller.button == vr::k_EButton_SteamVR_Trigger)
 			action = trigger;
 		else if (event.data.controller.button == vr::k_EButton_Grip)
@@ -626,7 +627,6 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 		if (action == handing) {
 			auto& nowtype = (hand == right) ? actionWarehouse.rHandingAngle : actionWarehouse.lHandingAngle;
 			auto angle = (edge == press) ? 144 : -144;
-
 			nowtype = angle;//ターゲットに目標角を代入
 		}
 		else {
@@ -1209,7 +1209,7 @@ void kenkyu::SolveAngles() {
 					//if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
 					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
 
-					kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
+					//kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
 					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
 				}
 				//グリッパーも送信
