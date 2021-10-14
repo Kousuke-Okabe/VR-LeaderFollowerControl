@@ -343,10 +343,6 @@ void kenkyu::InitGraphics() {
 		fboL->Unbind();
 	}
 
-	//内臓モニターも表示
-	/*inMonitor.reset(new _uuu::virtualWindow(kenkyu::windowBounds.first, kenkyu::windowBounds.second, &kenkyu::gmeshs["karixplane"].GetMesh()));
-	texturesRequiringBindAndUniform["vwindow0"] = (&inMonitor->col);*/
-
 	log("GPU resources was stored");
 }
 
