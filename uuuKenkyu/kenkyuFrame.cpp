@@ -622,7 +622,7 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 		//手先の処理かトラッキング処理か
 		if (action == handing) {
 			auto& nowtype = (hand == right) ? actionWarehouse.rHandingAngle : actionWarehouse.lHandingAngle;
-			auto angle = (edge == press) ? 144 : -144;
+			auto angle = (edge == press) ? -300 : 300;
 			nowtype = angle;//ターゲットに目標角を代入
 		}
 		else {
@@ -1209,8 +1209,8 @@ void kenkyu::SolveAngles() {
 					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
 				}
 				//グリッパーも送信
-				kenkyu::armTransfer->Move(7, ToHutabaDegreeFromRadians(kenkyu::actionWarehouse.rHandingAngle));
-				
+				kenkyu::armTransfer->Move(7, kenkyu::actionWarehouse.rHandingAngle);
+				std::cout << kenkyu::actionWarehouse.rHandingAngle << std::endl;
 			}
 
 
@@ -1382,6 +1382,6 @@ kenkyulocal::viewportSetterAndAutoReverter::~viewportSetterAndAutoReverter() {
 kenkyu::_actionWarehouse::_actionWarehouse() {
 	this->rhandtype = 1;
 	this->lhandtype = 1;
-	this->rHandingAngle = 0;
-	this->lHandingAngle = 0;
+	this->rHandingAngle = 300;
+	this->lHandingAngle = 300;
 }
