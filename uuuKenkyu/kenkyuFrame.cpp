@@ -1114,7 +1114,7 @@ template<typename T>T signNot0(const T& a) {
 	return (a > 0.0) ? 1.0 : -1.0;
 }
 
-kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
+/*kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
 
 	//実験装置に合わせたアーム()
 	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
@@ -1126,12 +1126,12 @@ kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
 	Eigen::Quaterniond quat(trans.rotation());
 
 	return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
-}
+}*/
 kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond& gen) {
 
 	//実験装置に合わせたアーム()
 	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
-	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), y) * AngleAxisd(q(4), z) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
+	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), x) * AngleAxisd(q(4), z) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
 
 	//ここから姿勢と座標を抜き出す 姿勢の表現を変えてみる
 	Eigen::Vector3d pos(trans.translation());
