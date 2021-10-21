@@ -184,8 +184,8 @@ namespace kenkyulocal {
 
 		static std::pair<unsigned int, unsigned int> windowBounds;//ウィンドウのサイズ(VR使用と未使用の差を吸収)
 
-		static std::mutex solverSpanRateShareMutex;
-		static double solverSpanRateShare;//ソルバーループのスパンをメインとソルバースレットで共有する
+		static std::mutex solverSpanMiliSecShareMutex;
+		static double solverSpanMillSecShare;//ソルバーループのスパンをメインとソルバースレットで共有する
 
 		//ソルバーの動作状況
 		class _solverState {

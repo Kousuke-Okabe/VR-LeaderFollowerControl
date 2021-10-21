@@ -58,8 +58,8 @@ cv::Mat kenkyu::movieFrameMat;
 
 //std::unordered_map<std::string,uuu::textureOperator*> kenkyu::texturesRequiringBindAndUniform;
 
-std::mutex kenkyu::solverSpanRateShareMutex;
-double kenkyu::solverSpanRateShare;
+std::mutex kenkyu::solverSpanMiliSecShareMutex;
+double kenkyu::solverSpanMillSecShare;
 
 void kenkyu::Draw() {
 
@@ -832,11 +832,11 @@ void kenkyu::GuiEvents() {
 
 		double solverSpan;//単位はセンチ秒
 		{
-			std::lock_guard<std::mutex> lock(solverSpanRateShareMutex);
-			solverSpan = 1.0 / solverSpanRateShare;
+			std::lock_guard<std::mutex> lock(solverSpanMiliSecShareMutex);
+			solverSpan = 1.0 / ((double)solverSpanMillSecShare/1000.0);
 		}
 		ImGui::Text("solver span rate");
-		if (systemBootFlags.serial||properties.enableDebugMode) ImGui::Text((std::string(" ") + to_stringf(1.0 / (solverSpan / 100.0))).c_str());
+		if (systemBootFlags.serial||properties.enableDebugMode) ImGui::Text((std::string(" ") + to_stringf(1.0 / solverSpan)).c_str());
 		else ImGui::Text(" Not booted yet.");
 	}
 	ImGui::End();
@@ -1099,7 +1099,7 @@ void kenkyu::InitAnyMembers() {
 
 	kenkyu::continueLoop = true;
 
-	solverSpanRateShare = 0.0;
+	solverSpanMillSecShare = 0.0;
 }
 
 glm::mat4 kenkyu::posAndQuat::toMat() {
@@ -1187,11 +1187,11 @@ void kenkyu::SolveAngles() {
 			//スレッドのスパン管理をする
 			std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - distWithoutSleep))));
 
-			//スパンをシェアする
-			double span = max(100.0 / 20.0,distWithoutSleep * 10.0);
+			//スパンをシェアする ミリ秒
+			double span = max(1000.0 / 20.0,(double)distWithoutSleep);
 			{
-				std::lock_guard<std::mutex> lock(solverSpanRateShareMutex);
-				solverSpanRateShare = span;
+				std::lock_guard<std::mutex> lock(solverSpanMiliSecShareMutex);
+				solverSpanMillSecShare = span;
 			}
 
 			beforeTimepoint = uuu::app::GetTimeFromInit();
@@ -1201,11 +1201,13 @@ void kenkyu::SolveAngles() {
 			//角度を送信する
 			if (properties.enableSerialSystem) {
 				for (size_t m = 1; m <= 6; m++) {
-					//スレッドが存在すればjoin
-					//if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
-					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
+					////スレッドが存在すればjoin
+					////if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
+					////kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
 
-					//kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span);
+					
+					kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span/10);
+					cout << span/10 << endl;
 					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
 				}
 				//グリッパーも送信
