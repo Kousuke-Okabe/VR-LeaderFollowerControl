@@ -1,10 +1,29 @@
 #include "kenkyuFrame.hpp"
 #include "xbeeForWin.hpp"
+#include "armOpeTransfer.hpp"
 
 using namespace std;
 using namespace kenkyulocal;
 
 int main() {
+
+	serialMgr myserial("COM3");
+	payload_6joint_1grip hell({0,0,0,0,0,0,0},'T');
+	while (1) {
+		std::cin >> hell.op;
+		for (size_t i = 0; i < 6; i++)
+			std::cin >> hell.j[i];
+		std::cin >> hell.g[0];
+		auto data = ChangeVersion(hell.ToBinary());
+		auto sliped = slip::toSlip(std::vector<unsigned char>(data.begin(), data.end()));
+		std::cout << std::string(sliped.begin(), sliped.end()) << std::endl;
+		myserial.Write(sliped);
+	}
+
+	return 0;
+}
+
+int xmain() {
 
 	try {
 		kenkyu::BootUuuSetForKekyu();

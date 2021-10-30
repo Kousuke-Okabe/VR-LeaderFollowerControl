@@ -403,6 +403,8 @@ namespace kenkyulocal {
 		//アプリを終了する
 		static void Terminate();
 
+		//データをシリアライズする
+
 		//ロギングする
 		enum logState {
 			logInfo,
