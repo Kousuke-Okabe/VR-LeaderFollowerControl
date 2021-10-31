@@ -35,6 +35,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "armOpeTransfer.hpp"
+
 #ifdef _DEBUG
 #pragma comment (lib, "LinearMath_Debug.lib")
 #pragma comment (lib, "BulletCollision_Debug.lib")
@@ -151,7 +153,7 @@ namespace kenkyulocal {
 
 		static std::chrono::system_clock::time_point origin;//開始時間
 
-		static std::unique_ptr<umeArmTransfer> armTransfer;//アームへの転送を行う
+		static std::unique_ptr<armTransferSlip> armTransfer;//アームへの転送を行う
 
 		static glm::vec3 hmdPos;//ヘッドセットの位置
 

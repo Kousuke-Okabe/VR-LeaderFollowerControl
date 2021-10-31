@@ -12,30 +12,23 @@
 #include <sstream>
 #include <initializer_list>
 #include <regex>
+#include <array>
+
+#include "xbeeForWin.hpp"
 
 namespace kenkyulocal {
 	//6関節+1グリッパーをもつアーム用ペイロード
 	struct payload_6joint_1grip {
-		using word = uint16_t;
+		using word = int16_t;
 		using byte = uint8_t;
-		word j[6];
-		word g[1];
+		word j[6];//ジョイントの角度
+		word s[6];//スピード
+		word g[1];//グリッパーの角度
 		char op;//T トルク,M 角度,(P 目標位置(x,y,z,q,r,s,w)=(j[0:5],g[0]))
 	public:
-		payload_6joint_1grip(const std::array<word,7>& qarg,char ops) {
-			for (size_t i = 0; i < 6; i++)
-				j[i] = qarg[i];
-
-			g[0] = qarg[6];
-			op = ops;
-		}
-		std::string ToBinary() {
-			std::stringstream ss;
-			boost::archive::text_oarchive archive(ss);
-			archive << *this;
-
-			return ss.str();
-		}
+		payload_6joint_1grip(const std::array<word, 7>& qarg, char ops);
+		payload_6joint_1grip();
+		std::string ToBinary();
 
 	private:
 		friend class boost::serialization::access;
@@ -48,15 +41,18 @@ namespace kenkyulocal {
 			ar& j[3];
 			ar& j[4];
 			ar& j[5];
+			ar& s[0];
+			ar& s[1];
+			ar& s[2];
+			ar& s[3];
+			ar& s[4];
+			ar& s[5];
 			ar& g[0];
 		}
 	};
 
 
-	std::string ChangeVersion(std::string arg) {
-		std::string str1 = std::regex_replace(arg, std::regex("serialization::archive 19"), "serialization::archive 16");
-		return str1;
-	}
+	std::string ChangeVersion(std::string arg);
 
 	//SLIPプロトコル
 	namespace slip {
@@ -65,65 +61,30 @@ namespace kenkyulocal {
 		const uint8_t ESC_END = 0xDC;
 		const uint8_t ESC_ESC = 0xDD;
 
-		std::vector<unsigned char> toSlip(const std::vector<unsigned char>& buf){
-			std::vector<unsigned char> ret;
-			ret.reserve(buf.size()+1);//bufのサイズ以上は確定なのでやっておく
+		std::vector<unsigned char> toSlip(const std::vector<unsigned char>& buf);
 
-			for (size_t i = 0; i < buf.size(); ++i) {
-				uint8_t data = buf.at(i); // i バイト目のデータ
+		std::vector<unsigned char> fromSlip(const std::vector<unsigned char>& buf);
 
-				if (data == END) // データの途中に END があったら
-				{
-					ret.push_back(ESC);     // ESC で置き換え
-					ret.push_back(ESC_END); // ESC_END を追加します
-				}
-				else if (data == ESC) // データの途中に ESC があったら 
-				{
-					ret.push_back(ESC);     // ESC で置き換え
-					ret.push_back(ESC_ESC); // ESC_ESC を追加します
-				}
-				else
-				{
-					ret.push_back(data); // それ以外はそのまま送ります
-				}
-			}
-			ret.push_back(END); // 最後だけENDを送信
+	};
 
-			return ret;
-		}
+	//アームのパケット生成
+	class armTransferSlip:public serialMgr {
+	protected:
+		payload_6joint_1grip data;
+		using word = typename payload_6joint_1grip::word;
 
-		std::vector<unsigned char> fromSlip(const std::vector<unsigned char>& buf){
-			std::vector<unsigned char> ret;
-			for (size_t i = 0; i < buf.size(); ++i){
-				uint8_t data = buf.at(i); // i 番目の受信データ
+		void Transfer();
+	public:
 
-				if (data == END) // 必ずパケットの終端なはず
-				{
-				}
-				else if (data == ESC) // ESCがあったら次のバイトは変換されているはず
-				{
-					uint8_t next = buf.at(i + 1); // ESC の次のパケット
+		armTransferSlip(const std::string& portname);
 
-					if (next == ESC_END) // ESC の次が ESC_END なら
-					{
-						ret.push_back(END); // i 番目のバイトは END
-					}
-					else if (next == ESC_ESC) // ESC の次が ESC_END なら
-					{
-						ret.push_back(ESC); // i 番目のバイトは ESC
-					}
-					++i; // next の次のバイトへ
-				}
-				else
-				{
-					ret.push_back(data); // それ以外のときはそのまま
-				}
-			}
+		//危険状態に全身を脱力する
+		void EmergencyCall();
+		//全モーターのトルクを有効にする
+		void PowerOn();
 
-
-			return ret;
-		}
-
+		//モーターの位置を制御する
+		void Move7(const std::array<word, 7>& angles);
 	};
 
 };

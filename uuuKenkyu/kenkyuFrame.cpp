@@ -22,7 +22,7 @@ kenkyu::_systemBootFlags kenkyu::systemBootFlags;
 
 kenkyu::_actionWarehouse kenkyu::actionWarehouse;
 
-std::unique_ptr<umeArmTransfer> kenkyu::armTransfer;
+std::unique_ptr<armTransferSlip> kenkyu::armTransfer;
 
 glm::vec3 kenkyu::hmdPos;
 //std::list<boost::thread> kenkyu::serialWriteThreads;
@@ -189,7 +189,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	if (properties.enableSerialSystem) {
 		try {
 
-			kenkyu::armTransfer.reset(new umeArmTransfer(properties.serialPort));
+			kenkyu::armTransfer.reset(new armTransferSlip(properties.serialPort));
 			kenkyu::log("Serial port was connected");
 			kenkyu::systemBootFlags.serial = true;
 		}
@@ -250,7 +250,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	FreeImage_Initialise();
 
 	//トルクを入れる
-	if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->Torque(255, 1);
+	if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->PowerOn();
 
 	//ソルバーを起動 シリアルかデバッグモード
 	if (kenkyu::systemBootFlags.serial||kenkyu::properties.enableDebugMode)solverThread.reset(new boost::thread(kenkyu::SolveAngles));
@@ -855,14 +855,14 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.6f, 0.1f, 0.1f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 
 			if (ImGui::Button("Emergency", ImVec2(windowBounds.first * 0.4 * 1.0, windowBounds.second * 0.5 * 0.25))&&kenkyu::systemBootFlags.serial)
-				kenkyu::armTransfer->Torque(255, 0);//緊急停止ボタン
+				kenkyu::armTransfer->EmergencyCall();//緊急停止ボタン
 			ImGui::PopStyleColor(2);
 
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 7.0f, 0.2f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.3f, 0.1f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			auto retorquePos = ImGui::GetCursorPos();
 			if (ImGui::Button("Retorque", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25)) && kenkyu::systemBootFlags.serial)
-				kenkyu::armTransfer->Torque(255, 1);//再トルク印加ボタン
+				kenkyu::armTransfer->PowerOn();//再トルク印加ボタン
 			ImGui::PopStyleColor(2);
 			
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.7f, 1.0f));
@@ -874,7 +874,7 @@ void kenkyu::GuiEvents() {
 				kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
 				kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
 
-				kenkyu::armTransfer->Move(255, 0, 500);
+				kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 });
 			}
 			ImGui::PopStyleColor(2);
 
@@ -1200,18 +1200,8 @@ void kenkyu::SolveAngles() {
 			
 			//角度を送信する
 			if (properties.enableSerialSystem) {
-				for (size_t m = 1; m <= 6; m++) {
-					////スレッドが存在すればjoin
-					////if (kenkyu::serialWriteThreads.at(m - 1))kenkyu::serialWriteThreads.at(m - 1)->join();
-					////kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread([] {std::this_thread::sleep_for(std::chrono::milliseconds(1000)); }));
-
-					
-					kenkyu::armTransfer->Move(m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span/10);
-					
-					//kenkyu::serialWriteThreads.at(m - 1).reset(new boost::thread(&umeArmTransfer::Move, kenkyu::armTransfer.get(), m, ToHutabaDegreeFromRadians(correctedAngles(m - 1)), span));
-				}
-				//グリッパーも送信
-				kenkyu::armTransfer->Move(7, kenkyu::actionWarehouse.rHandingAngle);
+				std::array<payload_6joint_1grip::word, 7> senddata = { ToHutabaDegreeFromRadians(correctedAngles(0)),ToHutabaDegreeFromRadians(correctedAngles(1)),ToHutabaDegreeFromRadians(correctedAngles(2)),ToHutabaDegreeFromRadians(correctedAngles(3)),ToHutabaDegreeFromRadians(correctedAngles(4)),ToHutabaDegreeFromRadians(correctedAngles(5)),kenkyu::actionWarehouse.rHandingAngle };
+				kenkyu::armTransfer->Move7(senddata);
 			}
 
 
