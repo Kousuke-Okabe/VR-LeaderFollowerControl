@@ -114,10 +114,12 @@ void armTransferSlip::PowerOn() {
 }
 
 //モーターの位置を制御する
-void armTransferSlip::Move7(const std::array<word, 7>& angles) {
+void armTransferSlip::Move7(const std::array<word, 7>& angles, const std::array<word, 6>& speeds) {
 	data.op = 'M';
 	for (size_t i = 0; i < 6; i++)
 		data.j[i] = angles.at(i);
+	for (size_t i = 0; i < 6; i++)
+		data.s[i] = speeds.at(i);
 	data.g[0] = angles.at(6);
 
 	Transfer();

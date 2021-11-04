@@ -874,7 +874,7 @@ void kenkyu::GuiEvents() {
 				kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
 				kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
 
-				kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 });
+				kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 }, { 100,100,100,100,100,100 });
 			}
 			ImGui::PopStyleColor(2);
 
@@ -1173,47 +1173,41 @@ void kenkyu::SolveAngles() {
 		}
 
 		auto beforeAngles = armSolver->GetAngles();
-		armSolver->SolverStep(ref, 1.0 / 16.0);//解析
+		armSolver->SolverStep(ref, span);//解析
 
 		auto jointAngles = armSolver->GetAngles();
-		if (true) {
-			//フォーマットをそろえる
-			//二つの値の値域を整える　0~2piにする　値域を中央に寄せる +-pi->値域を制限する +-150度(単位はラジアン)
-			auto correctedAngles = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(jointAngles)));
 
-			//sleepの直後から現在までの時間をとる
-			auto distWithoutSleep = uuu::app::GetTimeFromInit() - beforeTimepoint;
+		//フォーマットをそろえる
+		//二つの値の値域を整える　0~2piにする　値域を中央に寄せる +-pi->値域を制限する +-150度(単位はラジアン)
+		auto correctedAngles = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(jointAngles)));
 
-			//スレッドのスパン管理をする
-			std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - distWithoutSleep))));
+		//sleepの直後から現在までの時間をとる
+		auto distWithoutSleep = uuu::app::GetTimeFromInit() - beforeTimepoint;
 
-			//スパンをシェアする ミリ秒
-			double span = max(1000.0 / 20.0,(double)distWithoutSleep);
-			{
-				std::lock_guard<std::mutex> lock(solverSpanMiliSecShareMutex);
-				solverSpanMillSecShare = span;
-			}
+		//スレッドのスパン管理をする
+		std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - distWithoutSleep))));
 
-			beforeTimepoint = uuu::app::GetTimeFromInit();
-
-			//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			
-			//角度を送信する
-			if (properties.enableSerialSystem) {
-				std::array<payload_6joint_1grip::word, 7> senddata = { ToHutabaDegreeFromRadians(correctedAngles(0)),ToHutabaDegreeFromRadians(correctedAngles(1)),ToHutabaDegreeFromRadians(correctedAngles(2)),ToHutabaDegreeFromRadians(correctedAngles(3)),ToHutabaDegreeFromRadians(correctedAngles(4)),ToHutabaDegreeFromRadians(correctedAngles(5)),kenkyu::actionWarehouse.rHandingAngle };
-				kenkyu::armTransfer->Move7(senddata);
-			}
-
-
-			//更新にカウントをセットする
-			kenkyu::solverState.SetUpdate(1);
-
-			//ログファイルに書き込む
-			//auto now = std::chrono::system_clock::now();
-			//auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
-			//kenkyu::log<double, 6>(to_string(count), correctedAngles, kenkyu::logSaved, " ");
-
+		//スパンをシェアする ミリ秒
+		double span = max(1000.0 / 20.0,(double)distWithoutSleep);
+		{
+			std::lock_guard<std::mutex> lock(solverSpanMiliSecShareMutex);
+			solverSpanMillSecShare = span;
 		}
+
+		beforeTimepoint = uuu::app::GetTimeFromInit();
+
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			
+		//角度を送信する
+		if (properties.enableSerialSystem) {
+			std::array<payload_6joint_1grip::word, 7> senddata = { ToHutabaDegreeFromRadians(correctedAngles(0)),ToHutabaDegreeFromRadians(correctedAngles(1)),ToHutabaDegreeFromRadians(correctedAngles(2)),ToHutabaDegreeFromRadians(correctedAngles(3)),ToHutabaDegreeFromRadians(correctedAngles(4)),ToHutabaDegreeFromRadians(correctedAngles(5)),kenkyu::actionWarehouse.rHandingAngle };
+			std::array < payload_6joint_1grip::word, 6> speeddata; std::fill(speeddata.begin(), speeddata.end(), span);
+			kenkyu::armTransfer->Move7(senddata, speeddata);
+		}
+
+
+		//更新にカウントをセットする
+		kenkyu::solverState.SetUpdate(1);
 
 	}
 }

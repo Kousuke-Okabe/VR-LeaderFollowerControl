@@ -84,7 +84,7 @@ namespace kenkyulocal {
 		void PowerOn();
 
 		//モーターの位置を制御する
-		void Move7(const std::array<word, 7>& angles);
+		void Move7(const std::array<word, 7>& angles, const std::array<word, 6>& speeds);
 	};
 
 };
