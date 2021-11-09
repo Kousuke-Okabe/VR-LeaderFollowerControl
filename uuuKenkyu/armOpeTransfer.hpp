@@ -15,8 +15,10 @@
 #include <array>
 
 #include "xbeeForWin.hpp"
+#include "kenkyuFrame.hpp"
 
 namespace kenkyulocal {
+
 	//6関節+1グリッパーをもつアーム用ペイロード
 	struct payload_6joint_1grip {
 		using word = int16_t;
@@ -24,7 +26,7 @@ namespace kenkyulocal {
 		word j[6];//ジョイントの角度
 		word s[6];//スピード
 		word g[1];//グリッパーの角度
-		char op;//T トルク,M 角度,(P 目標位置(x,y,z,q,r,s,w)=(j[0:5],g[0]))
+		char op;//T トルク,M 角度,(P 目標位置(x,y,z,q,r,s,w)=(j[0:5],s[0]))
 	public:
 		payload_6joint_1grip(const std::array<word, 7>& qarg, char ops);
 		payload_6joint_1grip();
@@ -85,6 +87,8 @@ namespace kenkyulocal {
 
 		//モーターの位置を制御する
 		void Move7(const std::array<word, 7>& angles, const std::array<word, 6>& speeds);
+		//モーターに目標位置姿勢とグリッパーを送る j[0:5]とs[0]に位置姿勢を格納 gにグリッパー情報を入れる
+		void Posquat(const kenkyu::posAndQuat& posquat, const word& grip);
 	};
 
 };

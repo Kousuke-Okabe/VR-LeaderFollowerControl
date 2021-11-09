@@ -1,4 +1,5 @@
 #include "kenkyuFrame.hpp"
+#include "armOpeTransfer.hpp"
 
 using namespace std;
 using namespace uuu::easy::usings;
@@ -1102,7 +1103,7 @@ void kenkyu::InitAnyMembers() {
 	solverSpanMillSecShare = 0.0;
 }
 
-glm::mat4 kenkyu::posAndQuat::toMat() {
+glm::mat4 kenkyu::posAndQuat::toMat() const{
 	return glm::translate(this->pos) * this->quat.operator glm::mat<4, 4, glm::f32, glm::packed_highp>();
 }
 

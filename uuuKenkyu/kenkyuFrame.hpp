@@ -35,7 +35,7 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "armOpeTransfer.hpp"
+//#include "armOpeTransfer.hpp"
 
 #ifdef _DEBUG
 #pragma comment (lib, "LinearMath_Debug.lib")
@@ -50,6 +50,9 @@
 #endif
 
 namespace kenkyulocal {
+
+	//前方宣言s
+	class armTransferSlip;
 
 	//viewportつけれるfboオペレータ
 	class fboOperatorWithViewport:public uuu::frameBufferOperator {
@@ -90,7 +93,7 @@ namespace kenkyulocal {
 			glm::vec3 pos;
 			glm::quat quat;
 
-			glm::mat4 toMat();
+			glm::mat4 toMat() const;
 		};
 	private:
 		kenkyu();
