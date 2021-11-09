@@ -128,13 +128,13 @@ void armTransferSlip::Move7(const std::array<word, 7>& angles, const std::array<
 //モーターに目標位置姿勢とグリッパーを送る j[0:5]とs[0]に位置姿勢を格納 gにグリッパー情報を入れる
 void armTransferSlip::Posquat(const kenkyu::posAndQuat& posquat, const word& grip) {
 	data.op = 'P';
-	data.j[0] = posquat.pos.x;
-	data.j[1] = posquat.pos.y;
-	data.j[2] = posquat.pos.z;
-	data.j[3] = posquat.quat.x;
-	data.j[4] = posquat.quat.y;
-	data.j[5] = posquat.quat.z;
-	data.s[0] = posquat.quat.w;
+	data.j[0] = posquat.pos.x*10000;
+	data.j[1] = posquat.pos.y*10000;
+	data.j[2] = posquat.pos.z*10000;
+	data.j[3] = posquat.quat.x*10000;
+	data.j[4] = posquat.quat.y*10000;
+	data.j[5] = posquat.quat.z*10000;
+	data.s[0] = posquat.quat.w*10000;
 
 	data.g[0] = grip;
 

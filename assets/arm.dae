@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.93.1 commit date:2021-06-22, commit time:05:57, hash:1b8d33b18c2f</authoring_tool>
     </contributor>
-    <created>2021-08-28T23:20:27</created>
-    <modified>2021-08-28T23:20:27</modified>
+    <created>2021-11-09T20:57:28</created>
+    <modified>2021-11-09T20:57:28</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -184,7 +184,7 @@
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
       <node id="monkey" name="monkey" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">4.36848e-8 -1 1.52548e-9 0 -0.9993908 -4.37114e-8 -0.03489902 0 0.03489902 0 -0.9993908 0 0 0 0 1</matrix>
         <instance_geometry url="#monkey-mesh" name="monkey"/>
       </node>
       <node id="base" name="base" type="NODE">

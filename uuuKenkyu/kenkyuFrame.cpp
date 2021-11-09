@@ -1166,10 +1166,12 @@ void kenkyu::SolveAngles() {
 	size_t beforeTimepoint=uuu::app::GetTimeFromInit();
 
 	VectorC ref;
+	posAndQuat dammRef;
 	while (kenkyu::N_killSover) {
 		//ƒŠƒtƒ@ƒŒƒ“ƒX‚ğ“Ç‚İ‚İ
 		{
 			std::lock_guard<std::mutex> lock(mutexRefPoint);
+			dammRef = reference;
 			ref = VectorC(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z, reference.quat.w);
 		}
 
@@ -1203,7 +1205,8 @@ void kenkyu::SolveAngles() {
 		if (properties.enableSerialSystem) {
 			std::array<payload_6joint_1grip::word, 7> senddata = { ToHutabaDegreeFromRadians(correctedAngles(0)),ToHutabaDegreeFromRadians(correctedAngles(1)),ToHutabaDegreeFromRadians(correctedAngles(2)),ToHutabaDegreeFromRadians(correctedAngles(3)),ToHutabaDegreeFromRadians(correctedAngles(4)),ToHutabaDegreeFromRadians(correctedAngles(5)),kenkyu::actionWarehouse.rHandingAngle };
 			std::array < payload_6joint_1grip::word, 6> speeddata; std::fill(speeddata.begin(), speeddata.end(), span/10.0);
-			kenkyu::armTransfer->Move7(senddata, speeddata);
+			//kenkyu::armTransfer->Move7(senddata, speeddata);
+			kenkyu::armTransfer->Posquat(dammRef, 0);
 		}
 
 
