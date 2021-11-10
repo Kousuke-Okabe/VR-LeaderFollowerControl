@@ -1132,7 +1132,7 @@ kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond
 
 	//実験装置に合わせたアーム()
 	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
-	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), -z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), -y) * AngleAxisd(q(4), x) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
+	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), -z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), -y) * AngleAxisd(q(4), -x) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
 
 	//ここから姿勢と座標を抜き出す 姿勢の表現を変えてみる
 	Eigen::Vector3d pos(trans.translation());

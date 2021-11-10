@@ -36,7 +36,7 @@ void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const Eigen::Matrix<do
 	const glm::mat4 l1 = glm::rotate((float)angles[1], glm::vec3(0, 0, 1));
 	const glm::mat4 l2 = glm::rotate((float)angles[2], glm::vec3(0, 0, -1));
 	const glm::mat4 l3 = glm::rotate((float)angles[3], glm::vec3(0, -1, 0));
-	const glm::mat4 l4 = glm::rotate((float)angles[4], glm::vec3(1, 0, 0));
+	const glm::mat4 l4 = glm::rotate((float)angles[4], glm::vec3(-1, 0, 0));
 	const glm::mat4 l5 = glm::rotate((float)angles[5], glm::vec3(0, 1, 0));
 
 	//グローバル変形
