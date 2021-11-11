@@ -339,7 +339,7 @@ namespace armJointSolver {
 			//ƒ‚[ƒƒ“ƒg‚ðÅ“K‰»‚µ‚Ä‚¨‚­
 			this->defaultArguments.morments = Eigen::Matrix<double, 6, 1>(25, 25, 16, 9, 9, 4);
 		}
-		armInverseKineticsSolverForKenkyu(const std::function<VectorC(const VectorR&, const Eigen::Quaterniond&)>& func) :armInverseKineticsSolverForKenkyu(func, VectorR::Zero(), VectorR::Zero(), [&] {VectorC ret; for (size_t i = 0; i < dimC; i++)ret[i] = 5.0; return ret; }()) {
+		armInverseKineticsSolverForKenkyu(const std::function<VectorC(const VectorR&, const Eigen::Quaterniond&)>& func,const VectorR& defAngles) :armInverseKineticsSolverForKenkyu(func, VectorR::Zero(), defAngles, [&] {VectorC ret; for (size_t i = 0; i < dimC; i++)ret[i] = 5.0; return ret; }()) {
 
 		}
 	};

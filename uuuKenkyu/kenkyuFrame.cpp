@@ -1160,7 +1160,8 @@ void kenkyu::SolveAngles() {
 	using VectorC = Eigen::Matrix<double, 7, 1>;
 
 	//ソルバーを構成
-	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikkenWithGen));
+	auto sanjudo = 30.0 / 180.0 * M_PI;
+	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikkenWithGen, Vector6(sanjudo, sanjudo, sanjudo, sanjudo, sanjudo, sanjudo)));
 
 	//ループのスパンを取るための時間
 	size_t beforeTimepoint=uuu::app::GetTimeFromInit();
@@ -1206,7 +1207,7 @@ void kenkyu::SolveAngles() {
 			std::array<payload_6joint_1grip::word, 7> senddata = { ToHutabaDegreeFromRadians(correctedAngles(0)),ToHutabaDegreeFromRadians(correctedAngles(1)),ToHutabaDegreeFromRadians(correctedAngles(2)),ToHutabaDegreeFromRadians(correctedAngles(3)),ToHutabaDegreeFromRadians(correctedAngles(4)),ToHutabaDegreeFromRadians(correctedAngles(5)),kenkyu::actionWarehouse.rHandingAngle };
 			std::array < payload_6joint_1grip::word, 6> speeddata; std::fill(speeddata.begin(), speeddata.end(), span/10.0);
 			//kenkyu::armTransfer->Move7(senddata, speeddata);
-			kenkyu::armTransfer->Posquat(dammRef, 0);
+			kenkyu::armTransfer->Posquat(dammRef, kenkyu::actionWarehouse.rHandingAngle);
 		}
 
 
