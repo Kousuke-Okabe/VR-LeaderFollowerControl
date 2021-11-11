@@ -7,6 +7,8 @@ using namespace kenkyulocal;
 using namespace Eigen;
 
 const int kenkyu::version = 103;
+//初期姿勢
+auto initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -1085,11 +1087,12 @@ void kenkyu::InitAnyMembers() {
 	kenkyu::logThread.release();
 
 	//アームの初期姿勢はまっすぐ伸ばした状態
-	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
+
+	auto posquat = kenkyu::fjikkenWithGen(initialAngles, Quaterniond(1, 0, 0, 0));
 	{
 		std::lock_guard<std::mutex> lock(mutexRefPoint);
-		kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
-		kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
+		kenkyu::reference.pos = glm::vec3(posquat(0),posquat(1),posquat(2));
+		kenkyu::reference.quat = glm::quat(posquat(6), posquat(3), posquat(4), posquat(5));
 	}
 
 	//beforeも同じく
@@ -1160,8 +1163,7 @@ void kenkyu::SolveAngles() {
 	using VectorC = Eigen::Matrix<double, 7, 1>;
 
 	//ソルバーを構成
-	auto sanjudo = 30.0 / 180.0 * M_PI;
-	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikkenWithGen, Vector6(sanjudo, sanjudo, sanjudo, sanjudo, sanjudo, sanjudo)));
+	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikkenWithGen,initialAngles));
 
 	//ループのスパンを取るための時間
 	size_t beforeTimepoint=uuu::app::GetTimeFromInit();
