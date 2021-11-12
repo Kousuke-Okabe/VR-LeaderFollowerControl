@@ -140,3 +140,11 @@ void armTransferSlip::Posquat(const kenkyu::posAndQuat& posquat, const word& gri
 
 	Transfer();
 }
+
+void armTransferSlip::Extra(const char op[6]) {
+	data.op = 'X';
+	for (size_t i = 0; i < 6; i++)
+		data.j[i] = op[i];
+
+	Transfer();
+}

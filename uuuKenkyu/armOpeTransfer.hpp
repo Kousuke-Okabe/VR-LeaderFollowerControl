@@ -89,6 +89,9 @@ namespace kenkyulocal {
 		void Move7(const std::array<word, 7>& angles, const std::array<word, 6>& speeds);
 		//モーターに目標位置姿勢とグリッパーを送る j[0:5]とs[0]に位置姿勢を格納 gにグリッパー情報を入れる
 		void Posquat(const kenkyu::posAndQuat& posquat, const word& grip);
+
+		//特殊コマンド
+		void Extra(const char op[6]);
 	};
 
 };

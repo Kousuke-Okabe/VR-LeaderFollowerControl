@@ -883,8 +883,31 @@ void kenkyu::GuiEvents() {
 
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.2f, 0.0f, 0.2f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.0f, 0.5f, 1.0f));
+			auto exitPos = ImGui::GetCursorPos();
 			if (ImGui::Button("Exit", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25)))
 				kenkyu::continueLoop = false;//アプリ終了ボタン
+			ImGui::PopStyleColor(2);
+
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.4f, 0.0f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.2f, 0.2f, 0.0f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.5 + exitPos.x, 0 + exitPos.y));
+			auto wakePos = ImGui::GetCursorPos();
+			if (ImGui::Button("WAKE", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45, windowBounds.second * 0.5 * 0.25 * 0.5)) && kenkyu::systemBootFlags.serial)
+				kenkyu::armTransfer->Extra("wakeup");
+			ImGui::PopStyleColor(2);
+
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.4f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45 + wakePos.x, 0 + wakePos.y));
+			if (ImGui::Button("SLEEP", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.5, windowBounds.second * 0.5 * 0.25 * 0.5)) && kenkyu::systemBootFlags.serial)
+				kenkyu::armTransfer->Extra("sleep ");
+			ImGui::PopStyleColor(2);
+
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.0f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.2f, 0.0f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+			ImGui::SetCursorPos(ImVec2(0+wakePos.x, windowBounds.second * 0.5 * 0.25 * 0.5 + wakePos.y));
+			if (ImGui::Button("REBOOT", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45, windowBounds.second * 0.5 * 0.25 * 0.5)) && kenkyu::systemBootFlags.serial)
+				kenkyu::armTransfer->Extra("reboot");
 			ImGui::PopStyleColor(2);
 		}
 		else ImGui::Text("Not available.");
