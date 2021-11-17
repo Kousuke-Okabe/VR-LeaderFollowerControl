@@ -8,7 +8,7 @@ using namespace Eigen;
 
 const int kenkyu::version = 103;
 //‰Šúp¨
-const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
+const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
 const kenkyu::Vector7 kenkyu::initialMotion = kenkyu::fjikkenWithGen(kenkyu::initialAngles, Eigen::Quaterniond(1, 0, 0, 0));
 //‘Ò‹@p¨
 const kenkyu::Vector6 kenkyu::foldArmAngles = kenkyu::Vector6((-90.0 / 180.0) * M_PI, (60.0 / 180.0) * M_PI, (150.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
@@ -1122,7 +1122,7 @@ void kenkyu::InitAnyMembers() {
 
 	//ƒA[ƒ€‚Ì‰Šúp¨‚Íã‚É‹K’è
 
-	auto posquat = kenkyu::fjikkenWithGen(initialAngles, Quaterniond(1, 0, 0, 0));
+	auto posquat = kenkyu::initialMotion;
 	{
 		std::lock_guard<std::mutex> lock(mutexRefPoint);
 		kenkyu::reference.pos = glm::vec3(posquat(0),posquat(1),posquat(2));
@@ -1154,23 +1154,10 @@ template<typename T>T signNot0(const T& a) {
 	return (a > 0.0) ? 1.0 : -1.0;
 }
 
-/*kenkyu::Vector7 kenkyu::fjikken(const Vector6& q) {
-
-	//ÀŒ±‘•’u‚É‡‚í‚¹‚½ƒA[ƒ€()
-	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
-	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), y) * AngleAxisd(q(4), z) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
-
-	//‚±‚±‚©‚çp¨‚ÆÀ•W‚ğ”²‚«o‚· p¨‚Ì•\Œ»‚ğ•Ï‚¦‚Ä‚İ‚é
-	Eigen::Vector3d pos(trans.translation());
-	//p¨‚ğŒ¸Z‚ª’è‹`‚Å‚«‚é‚æ‚¤‚É‚ ‚ç‚í‚·@‰ñ“]²‚ğz+‚Ì‹…–Ê‚Æz=0•½–Ê‚Åy>0‚Å³‹K‰»‚·‚é
-	Eigen::Quaterniond quat(trans.rotation());
-
-	return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
-}*/
 kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond& gen) {
 
 	//ÀŒ±‘•’u‚É‡‚í‚¹‚½ƒA[ƒ€()
-	constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
+	constexpr double l1 = 0.305, l2 = 0.35, l3 = 0.22-0.085;
 	Affine3d trans = AngleAxisd(q(0), y) * AngleAxisd(q(1), z) * Translation<double, 3>(0, -l1, 0) * AngleAxisd(q(2), -z) * Translation<double, 3>(0, -l2, 0) * AngleAxisd(q(3), -y) * AngleAxisd(q(4), -x) * Translation<double, 3>(0, -l3, 0) * AngleAxisd(q(5), y);
 
 	//‚±‚±‚©‚çp¨‚ÆÀ•W‚ğ”²‚«o‚· p¨‚Ì•\Œ»‚ğ•Ï‚¦‚Ä‚İ‚é

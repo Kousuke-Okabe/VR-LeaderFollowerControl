@@ -28,8 +28,9 @@ void kenkyulocal::kenkyuArmMeshSet::Draw(const Eigen::Matrix<double, 6, 1>& angl
 void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const Eigen::Matrix<double,6,1>& angles) {
 	//それぞれのボーン情報　base-b0-link0-b1-link1-b2-link2
 	const glm::mat4 b0 = this->transform;
-	const glm::mat4 b1 = glm::translate(glm::vec3(0, -0.28, 0));
+	const glm::mat4 b1 = glm::translate(glm::vec3(0, -0.305, 0));
 	const glm::mat4 b2 = glm::translate(glm::vec3(0, -0.35, 0));
+	const glm::mat4 b3 = glm::translate(glm::vec3(0, -0.22-0.085, 0));
 
 	//ローカル変形
 	const glm::mat4 l0 = glm::rotate((float)angles[0], glm::vec3(0, 1, 0));
@@ -42,7 +43,7 @@ void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const Eigen::Matrix<do
 	//グローバル変形
 	glm::mat4 g0 = b0 * l0 * l1;
 	glm::mat4 g1 = g0 * b1 * l2;
-	glm::mat4 g2 = g1 * b2 * l3 * l4 * l5;
+	glm::mat4 g2 = g1 * b2 * l3 * l4 * l5 * b3;
 
 	this->meshes["arm0"].get()->SetTransform(g0);
 	this->meshes["arm1"].get()->SetTransform(g1);
