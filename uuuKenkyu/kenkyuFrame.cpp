@@ -8,7 +8,9 @@ using namespace Eigen;
 
 const int kenkyu::version = 103;
 //初期姿勢
-auto initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
+const auto initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
+//待機姿勢
+const auto foldArmAngle = kenkyu::Vector6((-90.0 / 180.0) * M_PI, (60.0 / 180.0) * M_PI, (150.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -63,6 +65,8 @@ cv::Mat kenkyu::movieFrameMat;
 
 std::mutex kenkyu::solverSpanMiliSecShareMutex;
 double kenkyu::solverSpanMillSecShare;
+
+kenkyu::_managerForReferencePos kenkyu::nowManagerForReference;
 
 void kenkyu::Draw() {
 
@@ -219,6 +223,8 @@ void kenkyu::BootUuuSetForKekyu() {
 	}
 	else kenkyu::log("Surpress VR system by \"enable VR = false\"");
 
+	//プロパティとシステムの起動状況をメンバに適用する
+	ApplyPropertiesAndSystemBootFlagsToMember();
 
 	//UUUのウィンドウをVRの画面サイズの半分に合わせて作る
 	if (kenkyu::systemBootFlags.vr) {
@@ -436,6 +442,9 @@ void kenkyu::Event() {
 	//デバッグモードが有効ならデバッグイベントを行う
 	if (properties.enableDebugMode)
 		kenkyu::DebugEvent();
+
+	//特殊イベント中はreferenceはこれが管理する
+
 	
 }
 
@@ -527,7 +536,7 @@ bool kenkyu::_movieBufferCraft::findBegin(const std::vector<uint8_t>& buf, std::
 
 void kenkyu::DebugEvent() {
 
-	if (!properties.enableVrSystem) {
+	if (nowManagerForReference==kenkyu::DEBUG) {
 		glm::vec3 dist(0, 0, 0);
 		//キーボードでリファレンスが動かせる
 		if (uuu::keyboardInterface::GetKeyInput(GLFW_KEY_A))
@@ -698,14 +707,11 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 					auto quatdist = q * glm::inverse(beforePosR.quat);
 
 					//目標姿勢を変換
-					{
+					if(nowManagerForReference==kenkyu::VR){
 						std::lock_guard<std::mutex> lock(mutexRefPoint);
 						kenkyu::reference.pos += posdist;
 						kenkyu::reference.quat = quatdist * kenkyu::reference.quat;
 					}
-
-					//当然モデル位置も更新
-					kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 				}
 				//パーはアブソリュートモード
 				else if (actionWarehouse.rhandtype == 0) {
@@ -713,26 +719,19 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 					auto posdist = pos - beforePosR.pos;
 
 					//目標姿勢を変換
-					{
+					if(nowManagerForReference==kenkyu::VR){
 						std::lock_guard<std::mutex> lock(mutexRefPoint);
 						kenkyu::reference.pos += posdist;
 						kenkyu::reference.quat = q;
 					}
-
-					//当然モデル位置も更新
-					kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 				}
+
+				//当然モデル位置も更新
+				kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 
 				//座標を記録
 				beforePosR.pos = pos;
 				beforePosR.quat = q;
-
-				//さらに座標を送信
-				//if (!kenkyu::serialWriteThread)
-					//kenkyu::serialWriteThread.reset(new boost::thread(&umeArmTransfer::Position, kenkyu::armMgr.get(), 1919, pos, 1000));
-				/*if (serialWriteThreads.size() < 1)
-					kenkyu::serialWriteThreads.push_back(boost::thread(&umeArmTransfer::Position, kenkyu::armMgr.get(), 1919, pos, 1000));
-					*/
 			}
 
 			if (role == vr::TrackedControllerRole_LeftHand) {
@@ -761,18 +760,6 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 		}
 		else continue;//それいがいは打ち切り
 	}
-
-	//目標位置を更新
-	/* {
-		lock_guard<std::mutex> lock(mutexArm);//アームを拘束
-		arm.SetRef(kenkyuArm::Vector7d(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z, reference.quat.w));
-	}*/
-	 
-	 
-	//腕の目標姿勢を送信する
-	/*if (!kenkyu::serialWriteThread)
-		kenkyu::serialWriteThread.reset(new boost::thread(&umeArmTransfer::PositionQuat, kenkyu::armMgr.get(), 1919, reference.pos, reference.quat, 1000));
-	*/
 }
 
 void kenkyu::GuiEvents() {
@@ -872,12 +859,14 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.0f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.5 + retorquePos.x, 0 + retorquePos.y));
 			if (ImGui::Button("Zero", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25)) && kenkyu::systemBootFlags.serial) {
-				constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
+				/*constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
 				std::lock_guard<std::mutex> lock(mutexRefPoint);
 				kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
 				kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
 
-				kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 }, { 100,100,100,100,100,100 });
+				kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 }, { 100,100,100,100,100,100 });*/
+
+				//特殊イベントを発行
 			}
 			ImGui::PopStyleColor(2);
 
@@ -892,15 +881,23 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.2f, 0.2f, 0.0f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.5 + exitPos.x, 0 + exitPos.y));
 			auto wakePos = ImGui::GetCursorPos();
-			if (ImGui::Button("WAKE", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45, windowBounds.second * 0.5 * 0.25 * 0.5)) && kenkyu::systemBootFlags.serial)
-				kenkyu::armTransfer->Extra("wakeup");
+			if (ImGui::Button("WAKE", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45, windowBounds.second * 0.5 * 0.25 * 0.5))) {
+				if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->Extra("wakeup");
+
+				//もしシリアルがなくてもアームを初期姿勢にしないと
+				//初期姿勢に持っていくために特殊リファレンスイベントを発行する
+			}
 			ImGui::PopStyleColor(2);
 
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.0f, 0.4f, 0.4f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.2f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45 + wakePos.x, 0 + wakePos.y));
-			if (ImGui::Button("SLEEP", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.5, windowBounds.second * 0.5 * 0.25 * 0.5)) && kenkyu::systemBootFlags.serial)
-				kenkyu::armTransfer->Extra("sleep ");
+			if (ImGui::Button("SLEEP", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.5, windowBounds.second * 0.5 * 0.25 * 0.5))) {
+				if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->Extra("sleep ");
+
+				//もしシリアルがなくてもアームは待機状態にしないと
+
+			}
 			ImGui::PopStyleColor(2);
 
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.0f, 0.4f, 1.0f));
@@ -1099,6 +1096,10 @@ void kenkyu::GetProperty(const std::string& path) {
 	return;
 }
 
+void kenkyu::ApplyPropertiesAndSystemBootFlagsToMember() {
+	kenkyu::nowManagerForReference = (systemBootFlags.vr) ? kenkyu::VR : (properties.enableDebugMode ? kenkyu::DEBUG : kenkyu::NONE);
+}
+
 void kenkyu::InitAnyMembers() {
 	//kenkyu::actionWarehouse.rhandtype = 1;
 	//kenkyu::actionWarehouse.lhandtype = 1;
@@ -1109,7 +1110,7 @@ void kenkyu::InitAnyMembers() {
 	kenkyu::solverThread.release();
 	kenkyu::logThread.release();
 
-	//アームの初期姿勢はまっすぐ伸ばした状態
+	//アームの初期姿勢は上に規定
 
 	auto posquat = kenkyu::fjikkenWithGen(initialAngles, Quaterniond(1, 0, 0, 0));
 	{
@@ -1127,6 +1128,8 @@ void kenkyu::InitAnyMembers() {
 	kenkyu::continueLoop = true;
 
 	solverSpanMillSecShare = 0.0;
+
+	nowManagerForReference = kenkyu::NONE;//所有権はまだ決定できない
 }
 
 glm::mat4 kenkyu::posAndQuat::toMat() const{

@@ -228,6 +228,11 @@ namespace kenkyulocal {
 
 		//static std::unordered_map<std::string,uuu::textureOperator*> texturesRequiringBindAndUniform;//バインドとユニフォームを要求するテクスチャ VR関係以外すべての参照
 
+		//リファレンスの現在の所有者
+		enum _managerForReferencePos { NONE, VR, DEBUG, ESP };
+		static _managerForReferencePos nowManagerForReference;
+
+
 		//hmdMatを変換する
 		static glm::mat4 TransVrMatToGmat4(const vr::HmdMatrix34_t& gen);
 
@@ -273,6 +278,8 @@ namespace kenkyulocal {
 
 		//kenkyuのプロパティーをプロパティシートから読み出す
 		static void GetProperty(const std::string& path);
+		//kenkyuのプロパティをメンバに適用する
+		static void ApplyPropertiesAndSystemBootFlagsToMember();
 
 		//いろいろな初期値を作成
 		static void InitAnyMembers();
