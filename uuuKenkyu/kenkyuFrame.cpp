@@ -8,9 +8,13 @@ using namespace Eigen;
 
 const int kenkyu::version = 103;
 //初期姿勢
-const auto initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
+const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
+const kenkyu::Vector7 kenkyu::initialMotion = kenkyu::fjikkenWithGen(kenkyu::initialAngles, Eigen::Quaterniond(1, 0, 0, 0));
 //待機姿勢
-const auto foldArmAngle = kenkyu::Vector6((-90.0 / 180.0) * M_PI, (60.0 / 180.0) * M_PI, (150.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
+const kenkyu::Vector6 kenkyu::foldArmAngles = kenkyu::Vector6((-90.0 / 180.0) * M_PI, (60.0 / 180.0) * M_PI, (150.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
+const kenkyu::Vector7 kenkyu::foldArmMotion = kenkyu::fjikkenWithGen(kenkyu::foldArmAngles, Eigen::Quaterniond(1, 0, 0, 0));
+
+const kenkyu::Vector7 kenkyu::zeroMotion = kenkyu::fjikkenWithGen(kenkyu::Vector6(0,0,0,0,0,0), Eigen::Quaterniond(1, 0, 0, 0));
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -444,7 +448,8 @@ void kenkyu::Event() {
 		kenkyu::DebugEvent();
 
 	//特殊イベント中はreferenceはこれが管理する
-
+	if (nowManagerForReference == kenkyu::ESP)
+		kenkyu::espReferenceController::EventEspReference();
 	
 }
 
@@ -576,9 +581,9 @@ void kenkyu::DebugEvent() {
 
 		reference.quat = disq * reference.quat;
 
-
-		kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 	}
+
+	kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 }
 
 void kenkyu::CallbackVrEvents(vr::VREvent_t event) {
@@ -858,15 +863,18 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.1f, 0.1f, 0.7f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.0f, 0.0f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.5 + retorquePos.x, 0 + retorquePos.y));
-			if (ImGui::Button("Zero", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25)) && kenkyu::systemBootFlags.serial) {
-				/*constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
-				std::lock_guard<std::mutex> lock(mutexRefPoint);
-				kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
-				kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
+			if (ImGui::Button("Zero", ImVec2(windowBounds.first * 0.4 * 0.48, windowBounds.second * 0.5 * 0.25))) {
+				if (kenkyu::systemBootFlags.serial) {
+					/*constexpr double l1 = 0.28, l2 = 0.35, l3 = 0.0;
+					std::lock_guard<std::mutex> lock(mutexRefPoint);
+					kenkyu::reference.pos = glm::vec3(0, -l1 - l2 - l3, 0);
+					kenkyu::reference.quat = glm::quat(1, 0, 0, 0);
 
-				kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 }, { 100,100,100,100,100,100 });*/
+					kenkyu::armTransfer->Move7({ 0,0,0,0,0,0,0 }, { 100,100,100,100,100,100 });*/
+				}
 
 				//特殊イベントを発行
+				kenkyu::espReferenceController::SetReferenceAim(posAndQuat::Make(kenkyu::zeroMotion), kenkyu::reference, nowManagerForReference);
 			}
 			ImGui::PopStyleColor(2);
 
@@ -886,6 +894,7 @@ void kenkyu::GuiEvents() {
 
 				//もしシリアルがなくてもアームを初期姿勢にしないと
 				//初期姿勢に持っていくために特殊リファレンスイベントを発行する
+				kenkyu::espReferenceController::SetReferenceAim(posAndQuat::Make(kenkyu::initialMotion), kenkyu::reference, nowManagerForReference);
 			}
 			ImGui::PopStyleColor(2);
 
@@ -896,6 +905,7 @@ void kenkyu::GuiEvents() {
 				if (kenkyu::systemBootFlags.serial)kenkyu::armTransfer->Extra("sleep ");
 
 				//もしシリアルがなくてもアームは待機状態にしないと
+				kenkyu::espReferenceController::SetReferenceAim(posAndQuat::Make(kenkyu::foldArmMotion), kenkyu::reference, nowManagerForReference);
 
 			}
 			ImGui::PopStyleColor(2);
@@ -1402,4 +1412,40 @@ kenkyu::_actionWarehouse::_actionWarehouse() {
 	this->lhandtype = 1;
 	this->rHandingAngle = 300;
 	this->lHandingAngle = 300;
+}
+
+
+
+
+
+kenkyu::posAndQuat kenkyu::espReferenceController::raim, kenkyu::espReferenceController::rbase;
+double kenkyu::espReferenceController::nowcount;
+double kenkyu::espReferenceController::countdist;
+kenkyu::_managerForReferencePos kenkyu::espReferenceController::beforeManager;
+void kenkyu::espReferenceController::SetReferenceAim(const posAndQuat& aim, const posAndQuat& base, _managerForReferencePos bef, const double& dist) {
+	raim = aim;
+	rbase = base;
+	nowcount = 0.0;
+	countdist = dist;
+	beforeManager = bef;
+
+	nowManagerForReference = kenkyu::ESP;
+}
+void kenkyu::espReferenceController::EventEspReference() {
+	nowcount += countdist;
+	auto corrected = std::min(nowcount, 1.0);
+	//カウント通りに線形補完する
+	reference.pos = (raim.pos * glm::vec3(corrected)) + (rbase.pos * glm::vec3(1.0 - corrected));
+	reference.quat = glm::slerp(rbase.quat, raim.quat, (float)corrected);
+
+	//もし目標についたら権限を戻してあげる
+	if (nowcount >= 1.0)nowManagerForReference = beforeManager;
+}
+
+kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector7& gen) {
+	posAndQuat pq;
+	pq.pos = glm::vec3(gen(0), gen(1), gen(2));
+	pq.quat = glm::quat(gen(6), gen(3), gen(4), gen(5));
+
+	return pq;
 }

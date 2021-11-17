@@ -94,6 +94,7 @@ namespace kenkyulocal {
 			glm::quat quat;
 
 			glm::mat4 toMat() const;
+			static posAndQuat Make(const Vector7& gen);
 		};
 	private:
 		kenkyu();
@@ -232,6 +233,26 @@ namespace kenkyulocal {
 		enum _managerForReferencePos { NONE, VR, DEBUG, ESP };
 		static _managerForReferencePos nowManagerForReference;
 
+		//特殊なリファレンスの動きを管理する
+		class espReferenceController {
+		protected:
+			static posAndQuat raim, rbase;
+			static double nowcount;
+			static double countdist;
+			static _managerForReferencePos beforeManager;
+		public:
+			static void SetReferenceAim(const posAndQuat& aim, const posAndQuat& base, _managerForReferencePos bef, const double& dist = 1.0 / 60.0);
+			static void EventEspReference();
+		};
+
+		//初期姿勢
+		static const Vector6 initialAngles;
+		static const Vector7 initialMotion;
+		//待機姿勢
+		static const Vector6 foldArmAngles;
+		static const Vector7 foldArmMotion;
+		//ゼロの時の位置
+		static const Vector7 zeroMotion;
 
 		//hmdMatを変換する
 		static glm::mat4 TransVrMatToGmat4(const vr::HmdMatrix34_t& gen);
