@@ -8,6 +8,7 @@ using namespace kenkyulocal;
 int main() {
 
 	try {
+		kenkyu::Lab();//実験要素を最初にやる
 		kenkyu::BootUuuSetForKekyu();
 		//グラフィックを用意する
 		kenkyu::InitGraphics();

@@ -1162,11 +1162,10 @@ kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond
 
 	//Ç±Ç±Ç©ÇÁépê®Ç∆ç¿ïWÇî≤Ç´èoÇ∑ épê®ÇÃï\åªÇïœÇ¶ÇƒÇ›ÇÈ
 	Eigen::Vector3d pos(trans.translation());
-	//épê®Çå∏éZÇ™íËã`Ç≈Ç´ÇÈÇÊÇ§Ç…Ç†ÇÁÇÌÇ∑Å@âÒì]é≤Çz+ÇÃãÖñ Ç∆z=0ïΩñ Ç≈y>0Ç≈ê≥ãKâªÇ∑ÇÈ
 	Eigen::Quaterniond quat(trans.rotation());
+
+	//genÇ…ãﬂÇ¢ópÇ»épê®ÇÇ∆ÇÈ
 	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
-
-
 	if ((gq - pq).squaredNorm() < (gq - mq).squaredNorm()) {
 		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
 	}
@@ -1435,4 +1434,14 @@ kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector7& gen) {
 	pq.quat = glm::quat(gen(6), gen(3), gen(4), gen(5));
 
 	return pq;
+}
+
+void kenkyu::Lab() {
+	auto testcase = kenkyu::Vector6(0, 0, 0, 0, 0, -M_PI/2.0);
+	auto motion = kenkyu::fjikkenWithGen(testcase, Eigen::Quaterniond(-1, 0, 0, 0));
+
+	cout << motion << endl;
+
+	exit(-1);
+	return;
 }

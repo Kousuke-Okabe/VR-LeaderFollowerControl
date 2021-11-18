@@ -469,6 +469,9 @@ namespace kenkyulocal {
 		//モーターの回転角を出す　ないときは例外
 		static Vector6 GetMoterAngles();
 
+		//kenkyuのプライベートを操作できる実験室
+		static void Lab();
+
 	};
 
 	

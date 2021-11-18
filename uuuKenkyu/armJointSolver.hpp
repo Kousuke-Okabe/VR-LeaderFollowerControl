@@ -319,17 +319,12 @@ namespace armJointSolver {
 			kineticsGen = Eigen::Quaterniond(ref(6), ref(3), ref(4), ref(5));
 			this->CalcAngleForJoints(timeStep, ref, VectorC::Zero(), this->defaultArguments.morments, this->defaultArguments.distance);
 
-			//std::cout << this->observer(this->GetAngleVelocities()) << std::endl;
-			//std::cout << this->nowSpringCoeff << std::endl;
-
 			//発振を検知すると角速度をリセットする
 			if (this->observer(this->GetAngleVelocities())) {
 				//this->angleVelocities = VectorR::Zero();
 				//this->observer.ResetContents();
 				//std::cout << "\a" << std::endl;
 			}
-
-
 		}
 
 		Eigen::Quaterniond kineticsGen;
