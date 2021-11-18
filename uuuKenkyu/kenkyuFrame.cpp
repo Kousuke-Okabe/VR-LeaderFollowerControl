@@ -10,6 +10,8 @@ const int kenkyu::version = 103;
 //èâä˙épê®
 const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
 const kenkyu::Vector7 kenkyu::initialMotion = kenkyu::fjikkenWithGen(kenkyu::initialAngles, Eigen::Quaterniond(1, 0, 0, 0));
+
+
 //ë“ã@épê®
 const kenkyu::Vector6 kenkyu::foldArmAngles = kenkyu::Vector6((-90.0 / 180.0) * M_PI, (60.0 / 180.0) * M_PI, (150.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
 const kenkyu::Vector7 kenkyu::foldArmMotion = kenkyu::fjikkenWithGen(kenkyu::foldArmAngles, Eigen::Quaterniond(1, 0, 0, 0));
@@ -1437,11 +1439,11 @@ kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector7& gen) {
 }
 
 void kenkyu::Lab() {
-	auto testcase = kenkyu::Vector6(0, 0, 0, 0, 0, -M_PI/2.0);
+	/*auto testcase = kenkyu::Vector6(0, 0, 0, 0, 0, -M_PI/2.0);
 	auto motion = kenkyu::fjikkenWithGen(testcase, Eigen::Quaterniond(-1, 0, 0, 0));
 
 	cout << motion << endl;
 
-	exit(-1);
+	exit(-1);*/
 	return;
 }
