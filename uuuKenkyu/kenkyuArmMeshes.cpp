@@ -5,10 +5,12 @@ kenkyulocal::kenkyuArmMeshSet::kenkyuArmMeshSet(std::unordered_map < std::string
 
 	//ここからセットアップしていく
 	this->meshes["base"].reset(new uuu::game::mesh((*shaders)["red"], kenkyu::assets("arm.dae"), "base-mesh", this->transform));
+
 	this->meshes["arm0"].reset(new uuu::game::mesh((*shaders)["norm"], kenkyu::assets("arm.dae"), "link0-mesh", this->transform));
 	this->meshes["arm1"].reset(new uuu::game::mesh((*shaders)["red"], kenkyu::assets("arm.dae"), "link1-mesh", this->transform));
+	this->meshes["arm2"].reset(new uuu::game::mesh((*shaders)["norm"], ("C:/local/uuu21-master/assets/arm.dae"), "link2-mesh", this->transform));
+
 	this->meshes["monkey"].reset(new uuu::game::mesh((*shaders)["rainbow"], kenkyu::assets("arm.dae"), "monkey-mesh", this->transform));
-	//this->meshes["arm2"].reset(new uuu::game::mesh((*shaders)["norm"],("C:/local/uuu21-master/assets/arm.dae"), "link2-mesh", this->transform*glm::translate(glm::vec3(0, +0.8, 0))*glm::rotate((float)M_PI / 2, glm::vec3(0, 0, 1))*glm::translate(glm::vec3(0,-0.8,0))));
 }
 
 void kenkyulocal::kenkyuArmMeshSet::Draw(const std::string& attribName) {
@@ -30,7 +32,7 @@ void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const Eigen::Matrix<do
 	const glm::mat4 b0 = this->transform;
 	const glm::mat4 b1 = glm::translate(glm::vec3(0, -0.305, 0));
 	const glm::mat4 b2 = glm::translate(glm::vec3(0, -0.35, 0));
-	const glm::mat4 b3 = glm::translate(glm::vec3(0, -0.22-0.085, 0));
+	const glm::mat4 b3 = glm::translate(glm::vec3(0, -0.08, 0));
 
 	//ローカル変形
 	const glm::mat4 l0 = glm::rotate((float)angles[0], glm::vec3(0, 1, 0));
@@ -43,11 +45,13 @@ void kenkyulocal::kenkyuArmMeshSet::SetTransformForAngles(const Eigen::Matrix<do
 	//グローバル変形
 	glm::mat4 g0 = b0 * l0 * l1;
 	glm::mat4 g1 = g0 * b1 * l2;
-	glm::mat4 g2 = g1 * b2 * l3 * l4 * l5 * b3;
+	glm::mat4 g2 = g1 * b2 * l3 * l4 * b3;
+	glm::mat4 g3 = g2 * l5;
 
 	this->meshes["arm0"].get()->SetTransform(g0);
 	this->meshes["arm1"].get()->SetTransform(g1);
-	this->meshes["monkey"].get()->SetTransform(g2);
+	this->meshes["arm2"].get()->SetTransform(g2);
+	this->meshes["monkey"].get()->SetTransform(g3);
 }
 
 

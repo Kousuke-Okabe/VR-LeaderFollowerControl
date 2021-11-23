@@ -307,13 +307,13 @@ namespace armJointSolver {
 		}
 
 	public:
-		void SolverStep(const VectorC& ref,T span) {
+		void SolverStep(const VectorC& ref,T simTime=1.0) {
 
 			//そもそも収束していれば無視する
 			if (this->CheckConvergence(ref))return;
 
-			//スパンからすすめる時間を決定する1/16で1.0sになるように作る
-			T timeStep = min(1.0, span / (1.0 / 16.0));
+			//スパンからすすめる時間を決定する
+			T timeStep = simTime;
 
 			//新しい角度を計算
 			kineticsGen = Eigen::Quaterniond(ref(6), ref(3), ref(4), ref(5));

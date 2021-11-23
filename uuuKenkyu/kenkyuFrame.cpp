@@ -1207,6 +1207,8 @@ kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaternion
 		sins[i] = sin(q(i));
 	}
 
+	const double l0 = 0.305, l1 = 0.35, l2 = 0.08;
+
 	//実験装置に合わせたアーム
 	/*	{{coses[0]*(coses[1]*(coses[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-sins[2]*sins[4]*sins[5])-sins[1]*(-sins[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-coses[2]*sins[4]*sins[5]))+sins[0]*(sins[3]*coses[5]-coses[3]*coses[4]*sins[5]), coses[0]*(coses[1]*(coses[2]*sins[3]*sins[4]+sins[2]*coses[4])-sins[1]*(coses[2]*coses[4]-sins[2]*sins[3]*sins[4]))-sins[0]*coses[3]*sins[4], coses[0]*(coses[1]*(coses[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])+sins[2]*sins[4]*coses[5])-sins[1]*(coses[2]*sins[4]*coses[5]-sins[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])))+sins[0]*(sins[3]*sins[5]+coses[3]*coses[4]*coses[5]), coses[0]*(coses[1]*(sins[2]*(-0.305*coses[4]-0.35)-0.305*coses[2]*sins[3]*sins[4])-sins[1]*(0.305*sins[2]*sins[3]*sins[4]+coses[2]*(-0.305*coses[4]-0.35)-0.305))+0.305*sins[0]*coses[3]*sins[4]},
 		{coses[1]*(-sins[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-coses[2]*sins[4]*sins[5])+sins[1]*(coses[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-sins[2]*sins[4]*sins[5]), coses[1]*(coses[2]*coses[4]-sins[2]*sins[3]*sins[4])+sins[1]*(coses[2]*sins[3]*sins[4]+sins[2]*coses[4]), coses[1]*(coses[2]*sins[4]*coses[5]-sins[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5]))+sins[1]*(coses[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])+sins[2]*sins[4]*coses[5]), coses[1]*(0.305*sins[2]*sins[3]*sins[4]+coses[2]*(-0.305*coses[4]-0.35)-0.305)+sins[1]*(sins[2]*(-0.305*coses[4]-0.35)-0.305*coses[2]*sins[3]*sins[4])},
@@ -1214,10 +1216,10 @@ kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaternion
 		{0, 0, 0, 1}};*/
 
 
-	Eigen::Vector3d pos(coses[0] * (coses[1] * (sins[2] * (-0.305 * coses[4] - 0.35) - 0.305 * coses[2] * sins[3] * sins[4]) - sins[1] * (0.305 * sins[2] * sins[3] * sins[4] + coses[2] * (-0.305 * coses[4] - 0.35) - 0.305)) + 0.305 * sins[0] * coses[3] * sins[4], coses[1] * (0.305 * sins[2] * sins[3] * sins[4] + coses[2] * (-0.305 * coses[4] - 0.35) - 0.305) + sins[1] * (sins[2] * (-0.305 * coses[4] - 0.35) - 0.305 * coses[2] * sins[3] * sins[4]), 0.305 * coses[0] * coses[3] * sins[4] - sins[0] * (coses[1] * (sins[2] * (-0.305 * coses[4] - 0.35) - 0.305 * coses[2] * sins[3] * sins[4]) - sins[1] * (0.305 * sins[2] * sins[3] * sins[4] + coses[2] * (-0.305 * coses[4] - 0.35) - 0.305)));
-	Eigen::Quaterniond quat(Eigen::Matrix3d({ {coses[0] * (coses[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5])) + sins[0] * (sins[3] * coses[5] - coses[3] * coses[4] * sins[5]), coses[0] * (coses[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4])) - sins[0] * coses[3] * sins[4], coses[0] * (coses[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5]) - sins[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]))) + sins[0] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5])},
-		{coses[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5]) + sins[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]), coses[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4]) + sins[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]), coses[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5])) + sins[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5])},
-		{coses[0] * (sins[3] * coses[5] - coses[3] * coses[4] * sins[5]) - sins[0] * (coses[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5])), -sins[0] * (coses[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4])) - coses[0] * coses[3] * sins[4], coses[0] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[0] * (coses[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5]) - sins[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5])))} }));
+	Eigen::Vector3d pos(coses[0] * (coses[1] * (sins[2] * (-l2 * coses[4] - l1) - l2 * coses[2] * sins[3] * sins[4]) - sins[1] * (l2 * sins[2] * sins[3] * sins[4] + coses[2] * (-l2 * coses[4] - l1) - l0)) + l2 * sins[0] * coses[3] * sins[4], coses[1] * (l2 * sins[2] * sins[3] * sins[4] + coses[2] * (-l2 * coses[4] - l1) - l0) + sins[1] * (sins[2] * (-l2 * coses[4] - l1) - l2 * coses[2] * sins[3] * sins[4]), l2 * coses[0] * coses[3] * sins[4] - sins[0] * (coses[1] * (sins[2] * (-l2 * coses[4] - l1) - l2 * coses[2] * sins[3] * sins[4]) - sins[1] * (l2 * sins[2] * sins[3] * sins[4] + coses[2] * (-l2 * coses[4] - l1) - l0)));
+	Eigen::Quaterniond quat(Eigen::Matrix3d({ {coses[0]*(coses[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5])) + sins[0] * (sins[3] * coses[5] - coses[3] * coses[4] * sins[5]), coses[0] * (coses[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4])) - sins[0] * coses[3] * sins[4], coses[0] * (coses[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5]) - sins[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]))) + sins[0] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5])},
+	{coses[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5]) + sins[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]), coses[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4]) + sins[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]), coses[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5])) + sins[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5])},
+	{coses[0] * (sins[3] * coses[5] - coses[3] * coses[4] * sins[5]) - sins[0] * (coses[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5])), -sins[0] * (coses[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4])) - coses[0] * coses[3] * sins[4], coses[0] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[0] * (coses[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5]) - sins[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5])))}}));
 
 	//genに近い用な姿勢をとる
 	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
@@ -1259,10 +1261,10 @@ void kenkyu::SolveAngles() {
 		auto distWithoutSleep = uuu::app::GetTimeFromInit() - beforeTimepoint;
 
 		//スレッドのスパン管理をする
-		std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 20.0 - distWithoutSleep))));
+		std::this_thread::sleep_for(std::chrono::milliseconds(max(0, (int)(1000.0 / 60.0 - distWithoutSleep))));
 
 		//スパンをシェアする ミリ秒
-		double span = max(1000.0 / 20.0, (double)distWithoutSleep);
+		double span = max(1000.0 / 60.0, (double)distWithoutSleep);
 		{
 			std::lock_guard<std::mutex> lock(solverSpanMiliSecShareMutex);
 			solverSpanMillSecShare = span;
@@ -1271,7 +1273,7 @@ void kenkyu::SolveAngles() {
 		beforeTimepoint = uuu::app::GetTimeFromInit();
 
 		auto beforeAngles = armSolver->GetAngles();
-		armSolver->SolverStep(ref, span);//解析
+		armSolver->SolverStep(ref);//解析
 
 		auto jointAngles = armSolver->GetAngles();
 
