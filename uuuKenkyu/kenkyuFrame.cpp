@@ -1171,7 +1171,7 @@ template<typename T>T signNot0(const T& a) {
 	return (a > 0.0) ? 1.0 : -1.0;
 }
 
-kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond& gen) {
+kenkyu::Vector7 kenkyu::fjikkenWithGenMatrixVersion(const Vector6& q,const Eigen::Quaterniond& gen) {
 
 	//実験装置に合わせたアーム()
 	constexpr double l1 = 0.305, l2 = 0.35, l3 = 0.22-0.085;
@@ -1180,6 +1180,36 @@ kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q,const Eigen::Quaterniond
 	//ここから姿勢と座標を抜き出す 姿勢の表現を変えてみる
 	Eigen::Vector3d pos(trans.translation());
 	Eigen::Quaterniond quat(trans.rotation());
+
+	//genに近い用な姿勢をとる
+	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
+	if ((gq - pq).squaredNorm() < (gq - mq).squaredNorm()) {
+		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
+	}
+	else {
+		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z(), -quat.w());
+	}
+}
+kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen) {
+
+	double coses[6];
+	double sins[6];
+	for (size_t i = 0; i < 6; i++) {
+		coses[i] = cos(q(i));
+		sins[i] = sin(q(i));
+	}
+
+	//実験装置に合わせたアーム
+	/*	{{coses[0]*(coses[1]*(coses[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-sins[2]*sins[4]*sins[5])-sins[1]*(-sins[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-coses[2]*sins[4]*sins[5]))+sins[0]*(sins[3]*coses[5]-coses[3]*coses[4]*sins[5]), coses[0]*(coses[1]*(coses[2]*sins[3]*sins[4]+sins[2]*coses[4])-sins[1]*(coses[2]*coses[4]-sins[2]*sins[3]*sins[4]))-sins[0]*coses[3]*sins[4], coses[0]*(coses[1]*(coses[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])+sins[2]*sins[4]*coses[5])-sins[1]*(coses[2]*sins[4]*coses[5]-sins[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])))+sins[0]*(sins[3]*sins[5]+coses[3]*coses[4]*coses[5]), coses[0]*(coses[1]*(sins[2]*(-0.305*coses[4]-0.35)-0.305*coses[2]*sins[3]*sins[4])-sins[1]*(0.305*sins[2]*sins[3]*sins[4]+coses[2]*(-0.305*coses[4]-0.35)-0.305))+0.305*sins[0]*coses[3]*sins[4]},
+		{coses[1]*(-sins[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-coses[2]*sins[4]*sins[5])+sins[1]*(coses[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-sins[2]*sins[4]*sins[5]), coses[1]*(coses[2]*coses[4]-sins[2]*sins[3]*sins[4])+sins[1]*(coses[2]*sins[3]*sins[4]+sins[2]*coses[4]), coses[1]*(coses[2]*sins[4]*coses[5]-sins[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5]))+sins[1]*(coses[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])+sins[2]*sins[4]*coses[5]), coses[1]*(0.305*sins[2]*sins[3]*sins[4]+coses[2]*(-0.305*coses[4]-0.35)-0.305)+sins[1]*(sins[2]*(-0.305*coses[4]-0.35)-0.305*coses[2]*sins[3]*sins[4])},
+		{coses[0]*(sins[3]*coses[5]-coses[3]*coses[4]*sins[5])-sins[0]*(coses[1]*(coses[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-sins[2]*sins[4]*sins[5])-sins[1]*(-sins[2]*(sins[3]*coses[4]*sins[5]+coses[3]*coses[5])-coses[2]*sins[4]*sins[5])), -sins[0]*(coses[1]*(coses[2]*sins[3]*sins[4]+sins[2]*coses[4])-sins[1]*(coses[2]*coses[4]-sins[2]*sins[3]*sins[4]))-coses[0]*coses[3]*sins[4], coses[0]*(sins[3]*sins[5]+coses[3]*coses[4]*coses[5])-sins[0]*(coses[1]*(coses[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5])+sins[2]*sins[4]*coses[5])-sins[1]*(coses[2]*sins[4]*coses[5]-sins[2]*(coses[3]*sins[5]-sins[3]*coses[4]*coses[5]))), 0.305*coses[0]*coses[3]*sins[4]-sins[0]*(coses[1]*(sins[2]*(-0.305*coses[4]-0.35)-0.305*coses[2]*sins[3]*sins[4])-sins[1]*(0.305*sins[2]*sins[3]*sins[4]+coses[2]*(-0.305*coses[4]-0.35)-0.305))},
+		{0, 0, 0, 1}};*/
+
+
+	Eigen::Vector3d pos(coses[0] * (coses[1] * (sins[2] * (-0.305 * coses[4] - 0.35) - 0.305 * coses[2] * sins[3] * sins[4]) - sins[1] * (0.305 * sins[2] * sins[3] * sins[4] + coses[2] * (-0.305 * coses[4] - 0.35) - 0.305)) + 0.305 * sins[0] * coses[3] * sins[4], coses[1] * (0.305 * sins[2] * sins[3] * sins[4] + coses[2] * (-0.305 * coses[4] - 0.35) - 0.305) + sins[1] * (sins[2] * (-0.305 * coses[4] - 0.35) - 0.305 * coses[2] * sins[3] * sins[4]), 0.305 * coses[0] * coses[3] * sins[4] - sins[0] * (coses[1] * (sins[2] * (-0.305 * coses[4] - 0.35) - 0.305 * coses[2] * sins[3] * sins[4]) - sins[1] * (0.305 * sins[2] * sins[3] * sins[4] + coses[2] * (-0.305 * coses[4] - 0.35) - 0.305)));
+	Eigen::Quaterniond quat(Eigen::Matrix3d({ {coses[0] * (coses[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5])) + sins[0] * (sins[3] * coses[5] - coses[3] * coses[4] * sins[5]), coses[0] * (coses[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4])) - sins[0] * coses[3] * sins[4], coses[0] * (coses[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5]) - sins[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]))) + sins[0] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5])},
+		{coses[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5]) + sins[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]), coses[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4]) + sins[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]), coses[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5])) + sins[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5])},
+		{coses[0] * (sins[3] * coses[5] - coses[3] * coses[4] * sins[5]) - sins[0] * (coses[1] * (coses[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - coses[2] * sins[4] * sins[5])), -sins[0] * (coses[1] * (coses[2] * sins[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * sins[3] * sins[4])) - coses[0] * coses[3] * sins[4], coses[0] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[0] * (coses[1] * (coses[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5]) + sins[2] * sins[4] * coses[5]) - sins[1] * (coses[2] * sins[4] * coses[5] - sins[2] * (coses[3] * sins[5] - sins[3] * coses[4] * coses[5])))} }));
 
 	//genに近い用な姿勢をとる
 	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());

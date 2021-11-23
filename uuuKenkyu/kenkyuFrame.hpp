@@ -456,7 +456,7 @@ namespace kenkyulocal {
 		static std::chrono::milliseconds GetSpan();
 
 		//アームの順運動学
-		//static Vector7 fjikken(const Vector6& q);
+		static Vector7 fjikkenWithGenMatrixVersion(const Vector6& q, const Eigen::Quaterniond& gen);//行列版　方程式がわかりやすいように
 		static Vector7 fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen);
 
 		//命令をシリアルで送る
