@@ -73,7 +73,7 @@ namespace kenkyulocal {
 		mutexed(T* ptr) {
 			reset(ptr);
 		}
-	protected:
+
 		void Access(std::function<void(T&)> func) {
 			std::lock_guard<std::mutex>lock(mt);
 
@@ -493,7 +493,25 @@ namespace kenkyulocal {
 		//アプリを終了する
 		static void Terminate();
 
-		//データをシリアライズする
+		//非同期的にロギングするシステム
+		class printer {
+			printer();
+		protected:
+			static std::unique_ptr<std::thread> writeThread;
+			static mutexed<std::deque<std::string>> closedBuffer;//ここにたすくをためる
+			static mutexed<bool> N_kill;
+		public:
+
+
+			static void Sub();
+
+			static void Boot();
+
+			static void Terminate();
+
+			static void Queue(const std::string& str);
+
+		};
 
 		//ロギングする
 		enum logState {

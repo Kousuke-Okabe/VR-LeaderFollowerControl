@@ -186,6 +186,9 @@ void kenkyu::BootUuuSetForKekyu() {
 
 	//開始時間をとる
 	kenkyu::origin = std::chrono::system_clock::now();
+
+	kenkyu::printer::Boot();//logを使えるようにprinterを起こす
+
 	kenkyu::log("booting...");
 
 	kenkyu::InitAnyMembers();
@@ -389,6 +392,8 @@ void kenkyu::Terminate() {
 	if(systemBootFlags.serial)MgrSendPosquadx::Terminate();
 
 	log("system was terminated");
+
+	kenkyu::printer::Terminate();
 }
 
 void kenkyu::SaveALog(std::string s) {
@@ -396,21 +401,22 @@ void kenkyu::SaveALog(std::string s) {
 }
 
 void kenkyu::log(const std::string& str, logState st) {
+	stringstream ss;
 	switch (st) {
 	case logState::logInfo:
-		cout<<"\033[0mINFO";
+		ss<<"\033[0mINFO";
 		break;
 	case logState::logWarning:
-		cout << "\033[33;4mWARNING";
+		ss << "\033[33;4mWARNING";
 		break;
 	case logState::logError:
-		cout << "\033[31;4mERROR";
+		ss << "\033[31;4mERROR";
 		break;
 	case logState::logNote:
-		cout << "\033[32;4mNOTE";
+		ss << "\033[32;4mNOTE";
 		break;
 	case kenkyu::logDebug:
-		cout << "\033[35mDEBUG";
+		ss << "\033[35mDEBUG";
 		break;
 	case kenkyu::logSaved:
 		if (logThread)
@@ -429,7 +435,9 @@ void kenkyu::log(const std::string& str, logState st) {
 	if (st != kenkyu::logSaved) {
 		auto now = std::chrono::system_clock::now();
 		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
-		std::cout << "[" << count << "]:\t" << str << "\033[0m" << std::endl;
+		ss << "[" << count << "]:\t" << str << "\033[0m";
+
+		printer::Queue(ss.str());
 	}
 
 	return;
@@ -1496,6 +1504,48 @@ void kenkyu::MgrSendPosquadx::Terminate() {
 	N_kill.setValue(false);
 	subthread->join();
 }
+
+std::unique_ptr<std::thread> kenkyu::printer::writeThread;
+mutexed<std::deque<std::string>> kenkyu::printer::closedBuffer;//ここにたすくをためる
+mutexed<bool> kenkyu::printer::N_kill;
+
+void kenkyu::printer::Sub() {
+	while (N_kill.getCopy()) {
+		auto copied = closedBuffer.getCopy();
+		if (copied.empty()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			continue;
+		}
+		std::cout << copied.front() << std::endl;
+
+		closedBuffer.Access([&](std::deque<std::string>& op) {op.pop_front(); });
+	}
+}
+
+void kenkyu::printer::Boot() {
+	N_kill.reset(new bool);
+	N_kill.setValue(true);
+	closedBuffer.reset(new std::deque<std::string>);
+	writeThread.reset(new std::thread(printer::Sub));
+}
+
+void kenkyu::printer::Terminate() {
+	N_kill.setValue(false);
+	writeThread->join();
+
+}
+void kenkyu::printer::Queue(const std::string& str) {
+	closedBuffer.Access([&](std::deque<std::string>& op) {op.push_back(str); });
+}
+
+
+
+
+
+
+
+
+
 
 void kenkyu::Lab() {
 	return;
