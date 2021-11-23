@@ -31,13 +31,12 @@ std::chrono::system_clock::time_point kenkyu::origin;
 kenkyu::_properties kenkyu::properties;
 kenkyu::_systemBootFlags kenkyu::systemBootFlags;
 
-kenkyu::_actionWarehouse kenkyu::actionWarehouse;
+mutexed<kenkyu::_actionWarehouse> kenkyu::actionWarehouse;
 
 std::unique_ptr<armTransferSlip> kenkyu::armTransfer;
 
 glm::vec3 kenkyu::hmdPos;
-//std::list<boost::thread> kenkyu::serialWriteThreads;
-std::array<std::unique_ptr<boost::thread>, 6> kenkyu::serialWriteThreads;
+
 std::unique_ptr<boost::thread> kenkyu::solverThread;
 std::unique_ptr<boost::thread> kenkyu::logThread;
 
@@ -73,6 +72,11 @@ std::mutex kenkyu::solverSpanMiliSecShareMutex;
 double kenkyu::solverSpanMillSecShare;
 
 kenkyu::_managerForReferencePos kenkyu::nowManagerForReference;
+
+mutexed<kenkyu::posAndQuat> kenkyu::MgrSendPosquadx::open;//解放側 メインスレッド側から書き換える
+mutexed<bool> kenkyu::MgrSendPosquadx::N_kill;//キルスイッチ
+kenkyu::posAndQuat kenkyu::MgrSendPosquadx::close;//閉鎖側　ここからしか使えない
+std::unique_ptr<std::thread> kenkyu::MgrSendPosquadx::subthread;
 
 void kenkyu::Draw() {
 
@@ -203,6 +207,7 @@ void kenkyu::BootUuuSetForKekyu() {
 		try {
 
 			kenkyu::armTransfer.reset(new armTransferSlip(properties.serialPort));
+			MgrSendPosquadx::Boot(posAndQuat::Make(initialMotion));
 			kenkyu::log("Serial port was connected");
 			kenkyu::systemBootFlags.serial = true;
 		}
@@ -381,6 +386,8 @@ void kenkyu::Terminate() {
 
 	FreeImage_DeInitialise();
 
+	MgrSendPosquadx::Terminate();
+
 	log("system was terminated");
 }
 
@@ -452,6 +459,11 @@ void kenkyu::Event() {
 	//特殊イベント中はreferenceはこれが管理する
 	if (nowManagerForReference == kenkyu::ESP)
 		kenkyu::espReferenceController::EventEspReference();
+
+	{
+		std::lock_guard<std::mutex> lock(kenkyu::mutexRefPoint);
+		MgrSendPosquadx::open.setValue(reference);
+	}
 	
 }
 
@@ -638,16 +650,18 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 
 	//こいつらが有効ならアクション処理を行う
 	if (hand && action && edge) {
+		_actionWarehouse nowaction = actionWarehouse.getCopy();
+
 		//手先の処理かトラッキング処理か
 		if (action == handing) {
-			auto& nowtype = (hand == right) ? actionWarehouse.rHandingAngle : actionWarehouse.lHandingAngle;
+			auto& nowtype = (hand == right) ? nowaction.rHandingAngle : nowaction.lHandingAngle;
 			auto angle = (edge == press) ? -300 : 300;
 			nowtype = angle;//ターゲットに目標角を代入
+
 		}
 		else {
-			//log("scene event " + std::to_string(hand) + " " + std::to_string(action) + " " + std::to_string(edge), logDebug);
 			//トリガー中はフラグを立てる
-			auto& nowtype = (hand == right) ? actionWarehouse.rhandtype : actionWarehouse.lhandtype;
+			auto& nowtype = (hand == right) ? nowaction.rhandtype : nowaction.lhandtype;
 
 			if (action == trigger && edge == press)nowtype = 2;
 			else if (action == grip && edge == press)nowtype = 0;
@@ -655,16 +669,18 @@ void kenkyu::VrSceneEvents(vr::VREvent_t event) {
 
 			//アクションがあったとき表示状態を切り替える
 			if (hand == right) {
-				kenkyu::gmeshs["rightHand"]->skipDraw = !(actionWarehouse.rhandtype == 0);
-				kenkyu::gmeshs["rightPointer"]->skipDraw = !(actionWarehouse.rhandtype == 1);
-				kenkyu::gmeshs["rightGoo"]->skipDraw = !(actionWarehouse.rhandtype == 2);
+				kenkyu::gmeshs["rightHand"]->skipDraw = !(nowaction.rhandtype == 0);
+				kenkyu::gmeshs["rightPointer"]->skipDraw = !(nowaction.rhandtype == 1);
+				kenkyu::gmeshs["rightGoo"]->skipDraw = !(nowaction.rhandtype == 2);
 			}
 			else if (hand == left) {
-				kenkyu::gmeshs["leftHand"]->skipDraw = !(actionWarehouse.lhandtype == 0);
-				kenkyu::gmeshs["leftPointer"]->skipDraw = !(actionWarehouse.lhandtype == 1);
-				kenkyu::gmeshs["leftGoo"]->skipDraw = !(actionWarehouse.lhandtype == 2);
+				kenkyu::gmeshs["leftHand"]->skipDraw = !(nowaction.lhandtype == 0);
+				kenkyu::gmeshs["leftPointer"]->skipDraw = !(nowaction.lhandtype == 1);
+				kenkyu::gmeshs["leftGoo"]->skipDraw = !(nowaction.lhandtype == 2);
 			}
 		}
+
+		actionWarehouse.setValue(nowaction);
 	}
 }
 void kenkyu::VrGeneralEvents(vr::VREvent_t event) {
@@ -708,7 +724,7 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 
 				//アクションがあるなら送信
 				//グーは相対モード
-				if (actionWarehouse.rhandtype == 2) {
+				if (actionWarehouse.getCopy().rhandtype == 2) {
 					//それぞれの差分ベクトルをとる
 					auto posdist = pos - beforePosR.pos;
 					auto quatdist = q * glm::inverse(beforePosR.quat);
@@ -721,7 +737,7 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 					}
 				}
 				//パーはアブソリュートモード
-				else if (actionWarehouse.rhandtype == 0) {
+				else if (actionWarehouse.getCopy().rhandtype == 0) {
 					//それぞれの差分ベクトルをとる
 					auto posdist = pos - beforePosR.pos;
 
@@ -1115,9 +1131,7 @@ void kenkyu::ApplyPropertiesAndSystemBootFlagsToMember() {
 void kenkyu::InitAnyMembers() {
 	//kenkyu::actionWarehouse.rhandtype = 1;
 	//kenkyu::actionWarehouse.lhandtype = 1;
-
-	for (int th = 0; th < 6; th++)
-		kenkyu::serialWriteThreads.at(th).release();
+	kenkyu::actionWarehouse.reset(new kenkyu::_actionWarehouse);
 
 	kenkyu::solverThread.release();
 	kenkyu::logThread.release();
@@ -1142,6 +1156,7 @@ void kenkyu::InitAnyMembers() {
 	solverSpanMillSecShare = 0.0;
 
 	nowManagerForReference = kenkyu::NONE;//所有権はまだ決定できない
+
 }
 
 glm::mat4 kenkyu::posAndQuat::toMat() const{
@@ -1225,16 +1240,6 @@ void kenkyu::SolveAngles() {
 		//フォーマットをそろえる
 		//二つの値の値域を整える　0~2piにする　値域を中央に寄せる +-pi->値域を制限する +-150度(単位はラジアン)
 		auto correctedAngles = CorrectAngleVecAreaForHutaba<double, 6>(CorrectAngleCenteredVec<double, 6>(CorrectAngleVec(jointAngles)));
-
-		//std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-			
-		//角度を送信する
-		if (properties.enableSerialSystem) {
-			std::array<payload_6joint_1grip::word, 7> senddata = { ToHutabaDegreeFromRadians(correctedAngles(0)),ToHutabaDegreeFromRadians(correctedAngles(1)),ToHutabaDegreeFromRadians(correctedAngles(2)),ToHutabaDegreeFromRadians(correctedAngles(3)),ToHutabaDegreeFromRadians(correctedAngles(4)),ToHutabaDegreeFromRadians(correctedAngles(5)),kenkyu::actionWarehouse.rHandingAngle };
-			std::array < payload_6joint_1grip::word, 6> speeddata; std::fill(speeddata.begin(), speeddata.end(), span/10.0);
-			//kenkyu::armTransfer->Move7(senddata, speeddata);
-			kenkyu::armTransfer->Posquat(dammRef, kenkyu::actionWarehouse.rHandingAngle);
-		}
 
 
 		//更新にカウントをセットする
@@ -1438,12 +1443,30 @@ kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector7& gen) {
 	return pq;
 }
 
+void kenkyu::MgrSendPosquadx::Sub() {
+	while (N_kill.getCopy()) {
+		//解放側から一つもらう
+		close = open.getCopy();
+
+		//送信
+		kenkyu::armTransfer->Posquat(close, actionWarehouse.getCopy().rHandingAngle);
+	}
+}
+void kenkyu::MgrSendPosquadx::Boot(const kenkyu::posAndQuat& init) {
+
+	open.reset(new posAndQuat);
+	N_kill.reset(new bool);
+
+	open.setValue(init);
+	N_kill.setValue(true);
+
+	subthread.reset(new std::thread(Sub));
+}
+void kenkyu::MgrSendPosquadx::Terminate() {
+	N_kill.setValue(false);
+	subthread->join();
+}
+
 void kenkyu::Lab() {
-	/*auto testcase = kenkyu::Vector6(0, 0, 0, 0, 0, -M_PI/2.0);
-	auto motion = kenkyu::fjikkenWithGen(testcase, Eigen::Quaterniond(-1, 0, 0, 0));
-
-	cout << motion << endl;
-
-	exit(-1);*/
 	return;
 }

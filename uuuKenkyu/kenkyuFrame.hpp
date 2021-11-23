@@ -54,6 +54,49 @@ namespace kenkyulocal {
 	//前方宣言s
 	class armTransferSlip;
 
+	template<typename T>class mutexed {
+	private:
+		mutexed(const mutexed&);
+		mutexed& operator=(const mutexed&);
+	protected:
+		std::mutex mt;
+		std::unique_ptr<T> obj;
+	public:
+		void reset(T* ptr) {
+			obj.reset(ptr);
+		}
+		void release() {
+			obj.release();
+		}
+
+		mutexed() {}
+		mutexed(T* ptr) {
+			reset(ptr);
+		}
+	protected:
+		void Access(std::function<void(T&)> func) {
+			std::lock_guard<std::mutex>lock(mt);
+
+			func(*obj.get());
+		}
+		void Access(std::function<void(const T&)> func) const {
+			std::lock_guard<std::mutex>lock(mt);
+
+			func(*obj.get());
+		}
+	public:
+		T getCopy() {
+			T ret;
+			Access([&](T& o) {ret = o; });
+
+			return ret;
+		}
+		void setValue(T ob) {
+			Access([&](T& o) {o = ob; });
+		}
+
+	};
+
 	//viewportつけれるfboオペレータ
 	class fboOperatorWithViewport:public uuu::frameBufferOperator {
 		using super = uuu::frameBufferOperator;
@@ -165,8 +208,6 @@ namespace kenkyulocal {
 		static posAndQuat beforePosR, beforeposL;//操作システムでフレーム間のコントローラの変化をとる
 		static posAndQuat reference;//現在のアーム手先の目標姿勢
 
-		//static std::list<boost::thread> serialWriteThreads;//いま書き込み中のシリアル
-		static std::array<std::unique_ptr<boost::thread>,6> serialWriteThreads;//書き込みするためのスレッド
 		static std::unique_ptr<boost::thread> solverThread;//ソルバーを動かすスレッド
 		static bool N_killSover;//ソルバーを殺すフラグ
 
@@ -183,7 +224,7 @@ namespace kenkyulocal {
 
 			_actionWarehouse();
 		};
-		static _actionWarehouse actionWarehouse;
+		static mutexed<_actionWarehouse> actionWarehouse;
 
 		static boost::optional<std::ofstream> logStream;
 		static std::unique_ptr<boost::thread> logThread;
@@ -416,8 +457,23 @@ namespace kenkyulocal {
 
 		//アームの順運動学
 		//static Vector7 fjikken(const Vector6& q);
-		public:
 		static Vector7 fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen);
+
+		//命令をシリアルで送る
+		class MgrSendPosquadx{
+			MgrSendPosquadx();
+		public:
+			static mutexed<posAndQuat> open;//解放側 メインスレッド側から書き換える
+		protected:
+
+			static mutexed<bool> N_kill;//キルスイッチ
+			static posAndQuat close;//閉鎖側　ここからしか使えない
+			static void Sub();
+			static std::unique_ptr<std::thread> subthread;
+		public:
+			static void Boot(const posAndQuat& init);
+			static void Terminate();
+		};
 
 	public:
 
