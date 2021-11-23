@@ -386,7 +386,7 @@ void kenkyu::Terminate() {
 
 	FreeImage_DeInitialise();
 
-	MgrSendPosquadx::Terminate();
+	if(systemBootFlags.serial)MgrSendPosquadx::Terminate();
 
 	log("system was terminated");
 }
@@ -460,7 +460,7 @@ void kenkyu::Event() {
 	if (nowManagerForReference == kenkyu::ESP)
 		kenkyu::espReferenceController::EventEspReference();
 
-	{
+	if(systemBootFlags.serial){
 		std::lock_guard<std::mutex> lock(kenkyu::mutexRefPoint);
 		MgrSendPosquadx::open.setValue(reference);
 	}
