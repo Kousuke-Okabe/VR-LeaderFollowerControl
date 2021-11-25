@@ -8,7 +8,7 @@ kenkyulocal::kenkyuArmMeshSet::kenkyuArmMeshSet(std::unordered_map < std::string
 
 	this->meshes["arm0"].reset(new uuu::game::mesh((*shaders)["norm"], kenkyu::assets("arm.dae"), "link0-mesh", this->transform));
 	this->meshes["arm1"].reset(new uuu::game::mesh((*shaders)["red"], kenkyu::assets("arm.dae"), "link1-mesh", this->transform));
-	this->meshes["arm2"].reset(new uuu::game::mesh((*shaders)["norm"], ("C:/local/uuu21-master/assets/arm.dae"), "link2-mesh", this->transform));
+	this->meshes["arm2"].reset(new uuu::game::mesh((*shaders)["norm"], kenkyu::assets("arm.dae"), "link2-mesh", this->transform));
 
 	this->meshes["monkey"].reset(new uuu::game::mesh((*shaders)["rainbow"], kenkyu::assets("arm.dae"), "monkey-mesh", this->transform));
 }
