@@ -8,7 +8,7 @@ using namespace Eigen;
 
 const int kenkyu::version = 103;
 //èâä˙épê®
-const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI);
+const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((0.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
 const kenkyu::Vector7 kenkyu::initialMotion = kenkyu::fjikkenWithGen(kenkyu::initialAngles, Eigen::Quaterniond(1, 0, 0, 0));
 
 
