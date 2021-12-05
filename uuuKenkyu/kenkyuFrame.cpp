@@ -945,8 +945,16 @@ void kenkyu::GuiEvents() {
 			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.0f, 0.4f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Button, kenkyu::systemBootFlags.serial ? ImVec4(0.2f, 0.0f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
 			ImGui::SetCursorPos(ImVec2(0+wakePos.x, windowBounds.second * 0.5 * 0.25 * 0.5 + wakePos.y));
+			auto rebootPos = ImGui::GetCursorPos();
 			if (ImGui::Button("REBOOT", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45, windowBounds.second * 0.5 * 0.25 * 0.5)) && kenkyu::systemBootFlags.serial)
 				kenkyu::armTransfer->Extra("reboot");
+			ImGui::PopStyleColor(2);
+
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.4f, 0.0f, 0.4f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Button, (kenkyu::systemBootFlags.serial && kenkyu::systemBootFlags.vr) ? ImVec4(0.2f, 0.0f, 0.2f, 1.0f) : ImVec4(0.2f, 0.2f, 0.2f, 1.0f));
+			ImGui::SetCursorPos(ImVec2(windowBounds.first * 0.4 * 0.48 * 0.45 + rebootPos.x, rebootPos.y));
+			if (ImGui::Button("VR/DEB", ImVec2(windowBounds.first * 0.4 * 0.48 * 0.5, windowBounds.second * 0.5 * 0.25 * 0.5)) && (kenkyu::systemBootFlags.serial && kenkyu::systemBootFlags.vr))
+				nowManagerForReference = (nowManagerForReference == kenkyu::VR) ? kenkyu::DEBUG : kenkyu::VR;
 			ImGui::PopStyleColor(2);
 		}
 		else ImGui::Text("Not available.");
