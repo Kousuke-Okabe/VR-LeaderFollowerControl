@@ -608,7 +608,7 @@ void kenkyu::DebugEvent() {
 
 	kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
 	std::stringstream ss;
-	ss << "right " << reference.pos.x << "," << reference.pos.y << "," << reference.pos.z << "," << reference.quat.x << "," << reference.quat.y << "," << reference.quat.z << "," << reference.quat.w;
+	ss << "right " <<std::fixed << std::setprecision(2) << reference.pos.x << "," << reference.pos.y << "," << reference.pos.z << "," << reference.quat.x << "," << reference.quat.y << "," << reference.quat.z << "," << reference.quat.w;
 	kenkyu::log(ss.str(), kenkyu::logSaved);
 }
 
@@ -776,7 +776,7 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 
 				//ƒƒO
 				std::stringstream ss;
-				ss << "left " << pos.x << "," << pos.y << "," << pos.z << "," << q.x << "," << q.y << "," << q.z << "," << q.w;
+				ss << "left " << std::fixed << std::setprecision(2) << pos.x << "," << pos.y << "," << pos.z << "," << q.x << "," << q.y << "," << q.z << "," << q.w;
 				kenkyu::log(ss.str(), kenkyu::logSaved);
 			}
 		}
