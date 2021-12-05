@@ -512,6 +512,24 @@ namespace kenkyulocal {
 			static void Queue(const std::string& str);
 
 		};
+		class filelogger{
+			filelogger();
+		protected:
+			static std::unique_ptr<std::thread> writeThread;
+			static mutexed<std::deque<std::string>> closedBuffer;//Ç±Ç±Ç…ÇΩÇ∑Ç≠ÇÇΩÇﬂÇÈ
+			static mutexed<bool> N_kill;
+			static std::unique_ptr<std::ofstream> file;
+		public:
+
+
+			static void Sub();
+
+			static void Boot();
+
+			static void Terminate();
+
+			static void Queue(const std::string& str);
+		};
 
 		//ÉçÉMÉìÉOÇ∑ÇÈ
 		enum logState {

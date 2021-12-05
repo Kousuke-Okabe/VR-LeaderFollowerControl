@@ -188,6 +188,7 @@ void kenkyu::BootUuuSetForKekyu() {
 	kenkyu::origin = std::chrono::system_clock::now();
 
 	kenkyu::printer::Boot();//logを使えるようにprinterを起こす
+	kenkyu::filelogger::Boot();//logfileも使える
 
 	kenkyu::log("booting...");
 
@@ -393,6 +394,7 @@ void kenkyu::Terminate() {
 
 	log("system was terminated");
 
+	kenkyu::filelogger::Terminate();
 	kenkyu::printer::Terminate();
 }
 
@@ -419,14 +421,6 @@ void kenkyu::log(const std::string& str, logState st) {
 		ss << "\033[35mDEBUG";
 		break;
 	case kenkyu::logSaved:
-		if (logThread)
-			if (logThread->joinable())//スレッドをくっつける
-				logThread->join();
-
-		if (!kenkyu::logStream)throw std::runtime_error("ログファイルが準備できていません。呼び出し順を確認してください。");
-
-		logThread.reset(new boost::thread(kenkyu::SaveALog, str));
-		
 		break;
 	default:
 		throw std::logic_error("不正なログ状態"+logInfo);
@@ -438,6 +432,13 @@ void kenkyu::log(const std::string& str, logState st) {
 		ss << "[" << count << "]:\t" << str << "\033[0m";
 
 		printer::Queue(ss.str());
+	}
+	else {
+		auto now = std::chrono::system_clock::now();
+		auto count = std::chrono::duration_cast<std::chrono::milliseconds>(now - kenkyu::origin).count();
+		ss << "[" << count << "]:\t" << str;
+
+		filelogger::Queue(ss.str());
 	}
 
 	return;
@@ -769,6 +770,11 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 				kenkyu::gmeshs["leftHand"]->SetTransform(trans);
 				kenkyu::gmeshs["leftPointer"]->SetTransform(trans);
 				kenkyu::gmeshs["leftGoo"]->SetTransform(trans);
+
+				//ログ
+				std::stringstream ss;
+				ss << pos.x << "," << pos.y << "," << pos.z << "," << q.x << "," << q.y << "," << q.z << "," << q.w;
+				kenkyu::log(ss.str(), kenkyu::logSaved);
 			}
 		}
 		//hmdなら
@@ -1537,8 +1543,40 @@ void kenkyu::printer::Queue(const std::string& str) {
 }
 
 
+std::unique_ptr<std::thread> kenkyu::filelogger::writeThread;
+mutexed<std::deque<std::string>> kenkyu::filelogger::closedBuffer;//ここにたすくをためる
+mutexed<bool> kenkyu::filelogger::N_kill;
+std::unique_ptr<ofstream> kenkyu::filelogger::file;
 
+void kenkyu::filelogger::Sub() {
+	while (N_kill.getCopy()) {
+		auto copied = closedBuffer.getCopy();
+		if (copied.empty()) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(5));
+			continue;
+		}
+		*file << copied.front() << std::endl;
 
+		closedBuffer.Access([&](std::deque<std::string>& op) {op.pop_front(); });
+	}
+}
+
+void kenkyu::filelogger::Boot() {
+	N_kill.reset(new bool);
+	N_kill.setValue(true);
+	file.reset(new std::ofstream("senddata.log"));
+	closedBuffer.reset(new std::deque<std::string>);
+	writeThread.reset(new std::thread(filelogger::Sub));
+}
+
+void kenkyu::filelogger::Terminate() {
+	N_kill.setValue(false);
+	writeThread->join();
+
+}
+void kenkyu::filelogger::Queue(const std::string& str) {
+	closedBuffer.Access([&](std::deque<std::string>& op) {op.push_back(str); });
+}
 
 
 
