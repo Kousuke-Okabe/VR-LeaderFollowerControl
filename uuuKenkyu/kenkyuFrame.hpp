@@ -138,6 +138,7 @@ namespace kenkyulocal {
 
 			glm::mat4 toMat() const;
 			static posAndQuat Make(const Vector6& gen);
+			static Vector6 Demake(const posAndQuat& gen);
 		};
 	private:
 		kenkyu();
