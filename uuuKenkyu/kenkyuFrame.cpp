@@ -1164,9 +1164,11 @@ void kenkyu::InitAnyMembers() {
 	//ÉAÅ[ÉÄÇÃèâä˙épê®ÇÕè„Ç…ãKíË
 
 	Vector6 posquat = kenkyu::initialMotion;
+	double w = sqrt(1.0 - pow(Eigen::Vector3d(posquat(3), posquat(4), posquat(5)).norm(), 2.0));
 	{
 		std::lock_guard<std::mutex> lock(mutexRefPoint);
-		kenkyu::reference = kenkyu::posAndQuat::Make(posquat);
+		kenkyu::reference.pos = glm::vec3(posquat(0),posquat(1),posquat(2));
+		kenkyu::reference.quat = glm::quat(w, posquat(3), posquat(4), posquat(5));
 	}
 
 	//beforeÇ‡ìØÇ∂Ç≠
@@ -1231,20 +1233,16 @@ kenkyu::Vector6 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaternion
 	//myarm(q):=angleaxis4x4(yaxis,q[1]) . angleaxis4x4(zaxis,q[2]) . translate(matrix([0],[-0.300],[0])) . angleaxis4x4(-zaxis,q[3]) . translate(matrix([-0.008],[-0.342],[0])) . angleaxis4x4(-yaxis,q[4]) . angleaxis4x4(-zaxis,q[5]) . translate(matrix([0],[-0.115],[0])) . angleaxis4x4(yaxis,q[6]);
 
 	Eigen::Vector3d pos(coses[0] * (coses[1] * (coses[2] * (-0.115 * coses[3] * sins[4] - 0.008) + sins[2] * (-0.115 * coses[4] - 0.342)) - sins[1] * (-sins[2] * (-0.115 * coses[3] * sins[4] - 0.008) + coses[2] * (-0.115 * coses[4] - 0.342) - 0.3)) - 0.115 * sins[0] * sins[3] * sins[4], coses[1] * (-sins[2] * (-0.115 * coses[3] * sins[4] - 0.008) + coses[2] * (-0.115 * coses[4] - 0.342) - 0.3) + sins[1] * (coses[2] * (-0.115 * coses[3] * sins[4] - 0.008) + sins[2] * (-0.115 * coses[4] - 0.342)), -sins[0] * (coses[1] * (coses[2] * (-0.115 * coses[3] * sins[4] - 0.008) + sins[2] * (-0.115 * coses[4] - 0.342)) - sins[1] * (-sins[2] * (-0.115 * coses[3] * sins[4] - 0.008) + coses[2] * (-0.115 * coses[4] - 0.342) - 0.3)) - 0.115 * coses[0] * sins[3] * sins[4]);
-	auto rotmat = Eigen::Matrix3d({ {coses[0] * (coses[1] * (coses[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[2] * sins[4] * coses[5]) - sins[1] * (-sins[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - coses[2] * sins[4] * coses[5])) + sins[0] * (sins[3] * coses[4] * coses[5] - coses[3] * sins[5]), coses[0] * (coses[1] * (coses[2] * coses[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * coses[3] * sins[4])) + sins[0] * sins[3] * sins[4], coses[0] * (coses[1] * (coses[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - coses[2] * sins[4] * sins[5])) + sins[0] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5])},
+	Eigen::Quaterniond quat(Eigen::Matrix3d({ {coses[0] * (coses[1] * (coses[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[2] * sins[4] * coses[5]) - sins[1] * (-sins[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - coses[2] * sins[4] * coses[5])) + sins[0] * (sins[3] * coses[4] * coses[5] - coses[3] * sins[5]), coses[0] * (coses[1] * (coses[2] * coses[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * coses[3] * sins[4])) + sins[0] * sins[3] * sins[4], coses[0] * (coses[1] * (coses[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - coses[2] * sins[4] * sins[5])) + sins[0] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5])},
 		{coses[1] * (-sins[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - coses[2] * sins[4] * coses[5]) + sins[1] * (coses[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[2] * sins[4] * coses[5]), coses[1] * (coses[2] * coses[4] - sins[2] * coses[3] * sins[4]) + sins[1] * (coses[2] * coses[3] * sins[4] + sins[2] * coses[4]), coses[1] * (-sins[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - coses[2] * sins[4] * sins[5]) + sins[1] * (coses[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - sins[2] * sins[4] * sins[5])},
-		{coses[0] * (sins[3] * coses[4] * coses[5] - coses[3] * sins[5]) - sins[0] * (coses[1] * (coses[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[2] * sins[4] * coses[5]) - sins[1] * (-sins[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - coses[2] * sins[4] * coses[5])), coses[0] * sins[3] * sins[4] - sins[0] * (coses[1] * (coses[2] * coses[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * coses[3] * sins[4])), coses[0] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[0] * (coses[1] * (coses[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - coses[2] * sins[4] * sins[5]))} });
-	
-	auto angled = Eigen::AngleAxisd(rotmat);
-
-	auto angleaxis=angled.axis()* (sin(angled.angle()/2.0)+2.0);
+		{coses[0] * (sins[3] * coses[4] * coses[5] - coses[3] * sins[5]) - sins[0] * (coses[1] * (coses[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - sins[2] * sins[4] * coses[5]) - sins[1] * (-sins[2] * (sins[3] * sins[5] + coses[3] * coses[4] * coses[5]) - coses[2] * sins[4] * coses[5])), coses[0] * sins[3] * sins[4] - sins[0] * (coses[1] * (coses[2] * coses[3] * sins[4] + sins[2] * coses[4]) - sins[1] * (coses[2] * coses[4] - sins[2] * coses[3] * sins[4])), coses[0] * (sins[3] * coses[4] * sins[5] + coses[3] * coses[5]) - sins[0] * (coses[1] * (coses[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - sins[2] * sins[4] * sins[5]) - sins[1] * (-sins[2] * (coses[3] * coses[4] * sins[5] - sins[3] * coses[5]) - coses[2] * sins[4] * sins[5]))} }));
 	//genÇ…ãﬂÇ¢ópÇ»épê®ÇÇ∆ÇÈ
-	Eigen::Vector3d pq(angleaxis.x(), angleaxis.y(), angleaxis.z()), mq = -pq, gq(gen.x(), gen.y(), gen.z());
+	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
 	if ((gq - pq).squaredNorm() < (gq - mq).squaredNorm()) {
-		return Eigen::Matrix<double, 6, 1>(pos.x(), pos.y(), pos.z(), pq.x(), pq.y(), pq.z());
+		return Eigen::Matrix<double, 6, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z());
 	}
 	else {
-		return Eigen::Matrix<double, 6, 1>(pos.x(), pos.y(), pos.z(), mq.x(), mq.y(), mq.z());
+		return Eigen::Matrix<double, 6, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z());
 	}
 }
 
@@ -1271,7 +1269,7 @@ void kenkyu::SolveAngles() {
 		{
 			std::lock_guard<std::mutex> lock(mutexRefPoint);
 			dammRef = reference;
-			ref = posAndQuat::Demake(kenkyu::reference);
+			ref = VectorC(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z);
 		}
 
 		//sleepÇÃíºå„Ç©ÇÁåªç›Ç‹Ç≈ÇÃéûä‘ÇÇ∆ÇÈ
@@ -1494,23 +1492,14 @@ void kenkyu::espReferenceController::EventEspReference() {
 
 kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector6& gen) {
 	posAndQuat pq;
-	auto quat3 = Eigen::Vector3d(gen(3), gen(4), gen(5));
-	auto norm = quat3.norm()-2.0;
-	quat3.normalize();
+
 	//wÇêÑíËÇ∑ÇÈ sin*axisÇ»ÇÃÇ≈normÇåvéZÇ∑ÇÍÇŒÇ¢Ç¢
-	double w = sqrt(1.0 - pow(norm, 2.0));
+	double w = sqrt(1.0 - pow(Eigen::Vector3d(gen(3), gen(4), gen(5)).norm(), 2.0));
 
 	pq.pos = glm::vec3(gen(0), gen(1), gen(2));
-	pq.quat = glm::quat(w, quat3(0)*norm, quat3(1)*norm, quat3(2)*norm);
+	pq.quat = glm::quat(w, gen(3), gen(4), gen(5));
 
 	return pq;
-}
-kenkyu::Vector6 kenkyu::posAndQuat::Demake(const kenkyu::posAndQuat& gen) {
-	
-	auto quat3 = Vector3d(gen.quat.x, gen.quat.y, gen.quat.z);
-	auto qnorm = quat3.norm()+2.0;
-	quat3.normalize();
-	return Vector6(gen.pos.x, gen.pos.y, gen.pos.z, quat3.x() * qnorm, quat3.y() * qnorm, quat3.z() * qnorm);
 }
 
 void kenkyu::MgrSendPosquadx::Sub() {
