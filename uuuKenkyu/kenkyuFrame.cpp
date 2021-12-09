@@ -1163,12 +1163,11 @@ void kenkyu::InitAnyMembers() {
 
 	//ƒA[ƒ€‚Ì‰Šúp¨‚Íã‚É‹K’è
 
-	Vector6 posquat = kenkyu::initialMotion;
-	double w = sqrt(1.0 - pow(Eigen::Vector3d(posquat(3), posquat(4), posquat(5)).norm(), 2.0));
+	auto posquat = kenkyu::initialMotion;
 	{
 		std::lock_guard<std::mutex> lock(mutexRefPoint);
 		kenkyu::reference.pos = glm::vec3(posquat(0),posquat(1),posquat(2));
-		kenkyu::reference.quat = glm::quat(w, posquat(3), posquat(4), posquat(5));
+		kenkyu::reference.quat = glm::quat(posquat(6), posquat(3), posquat(4), posquat(5));
 	}
 
 	//before‚à“¯‚¶‚­
