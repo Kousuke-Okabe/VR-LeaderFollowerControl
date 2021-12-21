@@ -137,7 +137,7 @@ namespace kenkyulocal {
 			glm::quat quat;
 
 			glm::mat4 toMat() const;
-			static posAndQuat Make(const Vector6& gen);
+			static posAndQuat Make(const Vector7& gen);
 		};
 	private:
 		kenkyu();
@@ -212,7 +212,7 @@ namespace kenkyulocal {
 		static bool N_killSover;//ソルバーを殺すフラグ
 
 		//static kenkyuArm arm;
-		static std::unique_ptr<armJointSolver::armInverseKineticsSolverForKenkyu<double,6,6>> armSolver;
+		static std::unique_ptr<armJointSolver::armInverseKineticsSolverForKenkyu<double,6,7>> armSolver;
 		static std::mutex mutexRefPoint;//アーム目標値の占有
 
 		struct _actionWarehouse {
@@ -288,12 +288,12 @@ namespace kenkyulocal {
 
 		//初期姿勢
 		static const Vector6 initialAngles;
-		static const Vector6 initialMotion;
+		static const Vector7 initialMotion;
 		//待機姿勢
 		static const Vector6 foldArmAngles;
-		static const Vector6 foldArmMotion;
+		static const Vector7 foldArmMotion;
 		//ゼロの時の位置
-		static const Vector6 zeroMotion;
+		static const Vector7 zeroMotion;
 
 		//hmdMatを変換する
 		static glm::mat4 TransVrMatToGmat4(const vr::HmdMatrix34_t& gen);
@@ -457,7 +457,7 @@ namespace kenkyulocal {
 
 		//アームの順運動学
 		static Vector7 fjikkenWithGenMatrixVersion(const Vector6& q, const Eigen::Quaterniond& gen);//行列版　方程式がわかりやすいように
-		static Vector6 fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen);
+		static Vector7 fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen);
 
 		//命令をシリアルで送る
 		class MgrSendPosquadx{

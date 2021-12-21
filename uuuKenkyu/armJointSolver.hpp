@@ -183,9 +183,9 @@ namespace armJointSolver {
 			Eigen::Vector4d quatB(-a(3) - base(3), -a(4) - base(4), -a(5) - base(5), -a(6) - base(6));
 
 			if (quatA.squaredNorm() < quatB.squaredNorm())
-				return VectorC(pos(0), pos(1), pos(2), quatA(0), quatA(1), quatA(2));
+				return VectorC(pos(0), pos(1), pos(2), quatA(0), quatA(1), quatA(2), quatA(3));
 			else
-				return VectorC(pos(0), pos(1), pos(2), quatB(0), quatB(1), quatB(2));
+				return VectorC(pos(0), pos(1), pos(2), quatB(0), quatB(1), quatB(2), quatB(3));
 		}
 
 		MatrixJ CalcJacobi(const std::function<VectorC(const VectorR&)>& f, const VectorR& q, const T d)const {

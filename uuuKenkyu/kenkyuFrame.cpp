@@ -9,14 +9,14 @@ using namespace Eigen;
 const int kenkyu::version = 103;
 //初期姿勢
 const kenkyu::Vector6 kenkyu::initialAngles = kenkyu::Vector6((0.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (30.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (90.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
-const kenkyu::Vector6 kenkyu::initialMotion = kenkyu::fjikkenWithGen(kenkyu::initialAngles, Eigen::Quaterniond(1, 0, 0, 0));
+const kenkyu::Vector7 kenkyu::initialMotion = kenkyu::fjikkenWithGen(kenkyu::initialAngles, Eigen::Quaterniond(1, 0, 0, 0));
 
 
 //待機姿勢
 const kenkyu::Vector6 kenkyu::foldArmAngles = kenkyu::Vector6((-90.0 / 180.0) * M_PI, (60.0 / 180.0) * M_PI, (150.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI, (0.0 / 180.0) * M_PI);
-const kenkyu::Vector6 kenkyu::foldArmMotion = kenkyu::fjikkenWithGen(kenkyu::foldArmAngles, Eigen::Quaterniond(1, 0, 0, 0));
+const kenkyu::Vector7 kenkyu::foldArmMotion = kenkyu::fjikkenWithGen(kenkyu::foldArmAngles, Eigen::Quaterniond(1, 0, 0, 0));
 
-const kenkyu::Vector6 kenkyu::zeroMotion = kenkyu::fjikkenWithGen(kenkyu::Vector6(0,0,0,0,0,0), Eigen::Quaterniond(1, 0, 0, 0));
+const kenkyu::Vector7 kenkyu::zeroMotion = kenkyu::fjikkenWithGen(kenkyu::Vector6(0,0,0,0,0,0), Eigen::Quaterniond(1, 0, 0, 0));
 
 uuu::vrMgr kenkyu::kenkyuVr;
 //typename std::vector<uuu::easy::neo3Dmesh> kenkyu::meshs;
@@ -45,7 +45,7 @@ kenkyu::posAndQuat kenkyu::reference;
 
 //kenkyulocal::kenkyuArm kenkyu::arm(kenkyuArm::Vector6d::Zero());
 std::mutex kenkyu::mutexRefPoint;
-std::unique_ptr<armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 6>> kenkyu::armSolver;
+std::unique_ptr<armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>> kenkyu::armSolver;
 
 bool kenkyu::N_killSover;
 
@@ -1215,7 +1215,7 @@ kenkyu::Vector7 kenkyu::fjikkenWithGenMatrixVersion(const Vector6& q,const Eigen
 		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z(), -quat.w());
 	}
 }
-kenkyu::Vector6 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen) {
+kenkyu::Vector7 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaterniond& gen) {
 
 	double coses[6];
 	double sins[6];
@@ -1238,10 +1238,10 @@ kenkyu::Vector6 kenkyu::fjikkenWithGen(const Vector6& q, const Eigen::Quaternion
 	//genに近い用な姿勢をとる
 	Eigen::Vector4d pq(quat.x(), quat.y(), quat.z(), quat.w()), mq = -pq, gq(gen.x(), gen.y(), gen.z(), gen.w());
 	if ((gq - pq).squaredNorm() < (gq - mq).squaredNorm()) {
-		return Eigen::Matrix<double, 6, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z());
+		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), quat.x(), quat.y(), quat.z(), quat.w());
 	}
 	else {
-		return Eigen::Matrix<double, 6, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z());
+		return Eigen::Matrix<double, 7, 1>(pos.x(), pos.y(), pos.z(), -quat.x(), -quat.y(), -quat.z(), -quat.w());
 	}
 }
 
@@ -1253,10 +1253,10 @@ bool CheckNearRefToNowArmPosAndQuat(const std::pair<double, double>& pq) {
 
 void kenkyu::SolveAngles() {
 
-	using VectorC = Eigen::Matrix<double, 6, 1>;
+	using VectorC = Eigen::Matrix<double, 7, 1>;
 
 	//ソルバーを構成
-	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 6>(&kenkyu::fjikkenWithGen,initialAngles));
+	kenkyu::armSolver.reset(new armJointSolver::armInverseKineticsSolverForKenkyu<double, 6, 7>(&kenkyu::fjikkenWithGen,initialAngles));
 
 	//ループのスパンを取るための時間
 	size_t beforeTimepoint=uuu::app::GetTimeFromInit();
@@ -1268,7 +1268,7 @@ void kenkyu::SolveAngles() {
 		{
 			std::lock_guard<std::mutex> lock(mutexRefPoint);
 			dammRef = reference;
-			ref = VectorC(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z);
+			ref = VectorC(reference.pos.x, reference.pos.y, reference.pos.z, reference.quat.x, reference.quat.y, reference.quat.z, reference.quat.w);
 		}
 
 		//sleepの直後から現在までの時間をとる
@@ -1489,14 +1489,10 @@ void kenkyu::espReferenceController::EventEspReference() {
 	if (nowcount >= 1.0)nowManagerForReference = beforeManager;
 }
 
-kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector6& gen) {
+kenkyu::posAndQuat kenkyu::posAndQuat::Make(const kenkyu::Vector7& gen) {
 	posAndQuat pq;
-
-	//wを推定する sin*axisなのでnormを計算すればいい
-	double w = sqrt(1.0 - pow(Eigen::Vector3d(gen(3), gen(4), gen(5)).norm(), 2.0));
-
 	pq.pos = glm::vec3(gen(0), gen(1), gen(2));
-	pq.quat = glm::quat(w, gen(3), gen(4), gen(5));
+	pq.quat = glm::quat(gen(6), gen(3), gen(4), gen(5));
 
 	return pq;
 }
