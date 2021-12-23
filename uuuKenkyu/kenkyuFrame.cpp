@@ -742,7 +742,6 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 				if ((rActionType !=1)&&!befAction) {
 					kenkyu::vrTrackingOrgPosR = { vrpos,q };
 					kenkyu::refTrackingOrgPosR = kenkyu::reference;
-					printf("hei%d\t%d\t%d\n", rActionType,befAction, (rActionType != 1) && !befAction);
 				}
 				befAction = rActionType != 1;
 
