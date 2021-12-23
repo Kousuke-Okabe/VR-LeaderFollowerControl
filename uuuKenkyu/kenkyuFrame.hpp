@@ -124,6 +124,7 @@ namespace kenkyulocal {
 	//to_string フォーマット指定できる版
 	std::string to_stringf(double _Val, const char* format = "%.3f");
 
+
 	//卒研のフレームシングルトン
 	class kenkyu {
 	public:
@@ -205,7 +206,8 @@ namespace kenkyulocal {
 		static glm::vec3 hmdPos;//ヘッドセットの位置
 
 		
-		static posAndQuat beforePosR, beforeposL;//操作システムでフレーム間のコントローラの変化をとる
+		//static posAndQuat beforePosR, beforeposL;//操作システムでフレーム間のコントローラの変化をとる
+		static posAndQuat vrTrackingOrgPosR,refTrackingOrgPosR;//追従中のVR空間の原点
 		static posAndQuat reference;//現在のアーム手先の目標姿勢
 
 		static std::unique_ptr<boost::thread> solverThread;//ソルバーを動かすスレッド

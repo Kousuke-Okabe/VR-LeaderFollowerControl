@@ -40,7 +40,8 @@ glm::vec3 kenkyu::hmdPos;
 std::unique_ptr<boost::thread> kenkyu::solverThread;
 std::unique_ptr<boost::thread> kenkyu::logThread;
 
-kenkyu::posAndQuat kenkyu::beforePosR, kenkyu::beforeposL;
+//kenkyu::posAndQuat kenkyu::beforePosR, kenkyu::beforeposL;
+kenkyu::posAndQuat kenkyu::vrTrackingOrgPosR, kenkyu::refTrackingOrgPosR;
 kenkyu::posAndQuat kenkyu::reference;
 
 //kenkyulocal::kenkyuArm kenkyu::arm(kenkyuArm::Vector6d::Zero());
@@ -723,7 +724,7 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 
 			
 			auto trans = properties.vrRotYAxis * kenkyu::TransVrMatToGmat4(devicePose.mDeviceToAbsoluteTracking);
-			glm::vec3 pos = trans * gvec4(0, 0, 0, 1);
+			glm::vec3 vrpos = trans * gvec4(0, 0, 0, 1);
 			glm::quat q(trans);
 
 			//log("quat",q);
@@ -734,50 +735,55 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 				kenkyu::gmeshs["rightPointer"]->SetTransform(trans);
 				kenkyu::gmeshs["rightGoo"]->SetTransform(trans);
 
+				auto rActionType = actionWarehouse.getCopy().rhandtype;
+
+				//トリガーの立ち上がりエッジにorgPosを更新したい
+				static bool befAction = false;
+				if (rActionType !=1&&~befAction) {
+					kenkyu::vrTrackingOrgPosR = { vrpos,q };
+				}
+				befAction = rActionType != 1;
+
 				//アクションがあるなら送信
 				//グーは相対モード
-				if (actionWarehouse.getCopy().rhandtype == 2) {
+				if (rActionType == 2) {
 					//それぞれの差分ベクトルをとる
-					auto posdist = pos - beforePosR.pos;
-					auto quatdist = q * glm::inverse(beforePosR.quat);
+					auto posdist = vrpos - kenkyu::vrTrackingOrgPosR.pos;//vr空間上の原点からの離れ方
+					auto quatdist = q * glm::inverse(kenkyu::vrTrackingOrgPosR.quat);//vr空間上での原点からの離れ方
 
 					//目標姿勢を変換
 					if(nowManagerForReference==kenkyu::VR){
 						std::lock_guard<std::mutex> lock(mutexRefPoint);
-						kenkyu::reference.pos += posdist;
-						kenkyu::reference.quat = quatdist * kenkyu::reference.quat;
+						kenkyu::reference.pos = posdist + kenkyu::refTrackingOrgPosR.pos;
+						kenkyu::reference.quat = quatdist * kenkyu::refTrackingOrgPosR.pos;
 					}
 				}
 				//パーはアブソリュートモード
-				else if (actionWarehouse.getCopy().rhandtype == 0) {
+				else if (rActionType == 0) {
 					//それぞれの差分ベクトルをとる
-					auto posdist = pos - beforePosR.pos;
+					auto posdist = vrpos - kenkyu::vrTrackingOrgPosR.pos;//vr空間上の原点からの離れ方
 
 					//目標姿勢を変換
 					if(nowManagerForReference==kenkyu::VR){
 						std::lock_guard<std::mutex> lock(mutexRefPoint);
-						kenkyu::reference.pos += posdist;
+						kenkyu::reference.pos = posdist + kenkyu::refTrackingOrgPosR.pos;
 						kenkyu::reference.quat = q;
 					}
 				}
 
 				//当然モデル位置も更新
 				kenkyu::gmeshs["cat"]->SetTransform(reference.toMat());
-
-				//座標を記録
-				beforePosR.pos = pos;
-				beforePosR.quat = q;
 			}
 
 			if (role == vr::TrackedControllerRole_LeftHand) {
-				kenkyu::gmeshs["leftHand"]->SetTransform(trans);
+				/*kenkyu::gmeshs["leftHand"]->SetTransform(trans);
 				kenkyu::gmeshs["leftPointer"]->SetTransform(trans);
 				kenkyu::gmeshs["leftGoo"]->SetTransform(trans);
 
 				//ログ
 				std::stringstream ss;
 				ss << "left " << std::fixed << std::setprecision(2) << pos.x << "," << pos.y << "," << pos.z << "," << q.x << "," << q.y << "," << q.z << "," << q.w;
-				kenkyu::log(ss.str(), kenkyu::logSaved);
+				kenkyu::log(ss.str(), kenkyu::logSaved);*/
 			}
 		}
 		//hmdなら
@@ -1170,9 +1176,9 @@ void kenkyu::InitAnyMembers() {
 		kenkyu::reference.quat = glm::quat(posquat(6), posquat(3), posquat(4), posquat(5));
 	}
 
-	//beforeも同じく
-	kenkyu::beforePosR = kenkyu::reference;
-	kenkyu::beforeposL = kenkyu::reference;
+	////beforeも同じく
+	//kenkyu::beforePosR = kenkyu::reference;
+	//kenkyu::beforeposL = kenkyu::reference;
 
 	kenkyu::N_killSover = true;//!false よってtrue
 
