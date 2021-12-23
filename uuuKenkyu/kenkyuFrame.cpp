@@ -757,7 +757,7 @@ void kenkyu::VrTrackingEvents(vr::VREvent_t event) {
 					if(nowManagerForReference==kenkyu::VR){
 						std::lock_guard<std::mutex> lock(mutexRefPoint);
 						kenkyu::reference.pos = posdist + kenkyu::refTrackingOrgPosR.pos;
-						kenkyu::reference.quat = quatdist * kenkyu::refTrackingOrgPosR.pos;
+						kenkyu::reference.quat = quatdist* refTrackingOrgPosR.quat;
 					}
 				}
 				//パーはアブソリュートモード
